@@ -258,7 +258,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: modalScaleIn .2s ease;
+  animation: scaleIn .2s ease;
 }
 
 .confirm-dialog h3 {

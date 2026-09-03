@@ -477,9 +477,10 @@ const AppData = {
     const queue = this.getQueueById(queueId);
     if (!queue) return null;
 
-    const issueCount = this._issues.filter(issue => issue.queueId === queueId).length;
+    const previousIssueCount = this._issues.length;
     this._queues = this._queues.filter(item => item.id !== queueId);
     this._issues = this._issues.filter(issue => issue.queueId !== queueId);
+    const issueCount = previousIssueCount - this._issues.length;
     this._logActivity(`Queue "${queue.name}" (${queue.key}) deleted with ${issueCount} issue(s)`);
     this._save();
 
@@ -587,22 +588,27 @@ const AppData = {
   },
 
   filterIssues({ queueId, status, priority, assigneeId, search, myTasks } = {}) {
-    let list = [...this._issues];
+    const currentUserId = myTasks ? this.getCurrentUser()?.id : null;
+    const term = search ? search.toLowerCase() : '';
 
-    if (myTasks) list = list.filter(i => i.assigneeId === this.getCurrentUser()?.id);
-    if (queueId) list = list.filter(i => i.queueId === queueId);
-    if (status && status.length) list = list.filter(i => status.includes(i.status));
-    if (priority && priority.length) list = list.filter(i => priority.includes(i.priority));
-    if (assigneeId) list = list.filter(i => i.assigneeId === assigneeId);
-    if (search) {
-      const term = search.toLowerCase();
-      list = list.filter(i =>
-        i.summary.toLowerCase().includes(term) ||
-        i.description.toLowerCase().includes(term)
-      );
-    }
+    const list = this._issues.filter(issue => {
+      if (myTasks && issue.assigneeId !== currentUserId) return false;
+      if (queueId && issue.queueId !== queueId) return false;
+      if (status && status.length && !status.includes(issue.status)) return false;
+      if (priority && priority.length && !priority.includes(issue.priority)) return false;
+      if (assigneeId && issue.assigneeId !== assigneeId) return false;
+      if (search) {
+        return issue.summary.toLowerCase().includes(term)
+          || issue.description.toLowerCase().includes(term);
+      }
+      return true;
+    });
 
-    return list.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    // Parse each date once; keep the stored issue order untouched.
+    return list
+      .map(issue => ({ issue, updatedAt: new Date(issue.updatedAt).getTime() }))
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map(entry => entry.issue);
   },
 
   _logActivity(msg) {

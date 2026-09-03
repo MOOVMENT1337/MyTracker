@@ -36,7 +36,7 @@ body.auth-view {
   border-radius: 24px;
   background: var(--color-surface);
   box-shadow: var(--shadow-lg);
-  animation: modalScaleIn .22s ease;
+  animation: scaleIn .22s ease;
 }
 
 .auth-brand {

@@ -47,13 +47,6 @@ function escapeAttr(str) {
   return escapeHtml(str).replace(/'/g, '&#39;');
 }
 
-function componentInitials(displayName) {
-  const parts = String(displayName || 'User').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return 'U';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}
-
 function authLabel(key, fallback) {
   return typeof authText === 'function' ? authText(key) : fallback;
 }
@@ -91,9 +84,15 @@ function formatDuration(statusChangedAt) {
   return `${days}d`;
 }
 
-function formatStatusTimer(issue) {
+function renderStatusTimer(issue) {
   const status = issue?.status || 'Open';
-  return `${translateStatus(status)} • ${formatDuration(issue?.statusChangedAt || issue?.createdAt)}`;
+  return `
+    <span class="badge ${statusClass(status)}">${escapeHtml(translateStatus(status))}</span>
+    <span class="task-status-duration">
+      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+      ${formatDuration(issue?.statusChangedAt || issue?.createdAt)}
+    </span>
+  `;
 }
 
 function getTaskUrl(issueId) {
@@ -153,7 +152,7 @@ function renderAvatar(user, size = 28) {
   }
 
   const displayName = user.displayName || user.email || 'User';
-  const initials = user.initials || user.avatar || componentInitials(displayName);
+  const initials = user.initials || user.avatar || getInitials(displayName);
   const avatarColor = user.avatarColor || '#4F8EF7';
 
   return `
@@ -410,7 +409,7 @@ function createTaskCard(issue) {
          data-issue-id="${escapeAttr(issue.id)}"
          data-status="${escapeAttr(issue.status)}"
          data-status-changed-at="${escapeAttr(issue.statusChangedAt || issue.createdAt || '')}">
-      ${formatStatusTimer(issue)}
+      ${renderStatusTimer(issue)}
     </div>
 
     <div class="task-card-footer">
@@ -441,10 +440,14 @@ function renderKanbanBoard(issues) {
   }
 
   const statuses = AppData.getStatusList();
+  const issuesByStatus = new Map(statuses.map(status => [status, []]));
+  issues.forEach(issue => {
+    issuesByStatus.get(issue.status)?.push(issue);
+  });
   const board = el('div', 'kanban-board board-entering');
 
   statuses.forEach(status => {
-    const statusIssues = issues.filter(issue => issue.status === status);
+    const statusIssues = issuesByStatus.get(status);
     const column = el('section', 'kanban-column');
     const header = el('div', 'kanban-column-header');
     const body = el('div', 'kanban-column-body');
@@ -625,15 +628,16 @@ function renderComments(issue) {
     return `<div class="comment-empty"><i class="fa-regular fa-comment-dots"></i> ${t('misc.noCommentsYet')}</div>`;
   }
 
+  const currentUserId = AppData.getCurrentUser()?.id;
   return issue.comments.map(comment => {
     const author = AppData.getUserById(comment.authorId);
     const authorName = author ? author.displayName : (comment.author || 'Unknown');
     const avatarUser = author || {
       displayName: authorName,
-      initials: componentInitials(authorName),
+      initials: getInitials(authorName),
       avatarColor: '#9099A8',
     };
-    const isCurrentUser = comment.authorId === AppData.getCurrentUser()?.id;
+    const isCurrentUser = comment.authorId === currentUserId;
 
     return `
       <div class="comment-item" data-comment-id="${comment.id}">

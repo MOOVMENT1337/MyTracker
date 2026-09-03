@@ -410,6 +410,16 @@ const authTranslations = {
   },
 };
 
+function translateMessage(dictionary, language, key, params) {
+  const path = key.split('.');
+  const value = path.reduce((acc, part) => acc?.[part], dictionary[language])
+    ?? path.reduce((acc, part) => acc?.[part], dictionary.en)
+    ?? key;
+
+  if (typeof value !== 'string') return key;
+  return value.replace(/\{(\w+)\}/g, (_, token) => params[token] ?? `{${token}}`);
+}
+
 function authText(key, params = {}) {
   let language = 'en';
   try {
@@ -418,15 +428,11 @@ function authText(key, params = {}) {
     language = 'en';
   }
 
-  const value = key.split('.').reduce((acc, part) => acc?.[part], authTranslations[language])
-    ?? key.split('.').reduce((acc, part) => acc?.[part], authTranslations.en)
-    ?? key;
+  return translateMessage(authTranslations, language, key, params);
+}
 
-  if (typeof value !== 'string') return key;
-
-  return value.replace(/\{(\w+)\}/g, (_, token) => {
-    return params[token] ?? `{${token}}`;
-  });
+function createEmptyFilters() {
+  return { status: [], priority: [], assigneeId: '', search: '' };
 }
 
 const State = {
@@ -439,12 +445,7 @@ const State = {
   language: localStorage.getItem('yt_clone_language') || 'en',
   dragState: null,
   statusTimerInterval: null,
-  filters: {
-    status: [],
-    priority: [],
-    assigneeId: '',
-    search: '',
-  },
+  filters: createEmptyFilters(),
   get users() { return AppData.getUsers(); },
   get queues() { return AppData.getQueues(); },
   get currentUserId() { return AppData.getCurrentUser()?.id; },
@@ -455,16 +456,7 @@ function getCurrentLanguage() {
 }
 
 function t(key, params = {}) {
-  const language = getCurrentLanguage();
-  const value = key.split('.').reduce((acc, part) => acc?.[part], translations[language])
-    ?? key.split('.').reduce((acc, part) => acc?.[part], translations.en)
-    ?? key;
-
-  if (typeof value !== 'string') return key;
-
-  return value.replace(/\{(\w+)\}/g, (_, token) => {
-    return params[token] ?? `{${token}}`;
-  });
+  return translateMessage(translations, getCurrentLanguage(), key, params);
 }
 
 function translateStatus(status) {
@@ -493,22 +485,8 @@ const PREDEFINED_ROLE_NAMES = [
   'Employee',
 ];
 
-const ROLE_ALIASES_UI = {
-  'Сотрудник': 'Employee',
-  'Администратор': 'Administrator',
-  'Аналитик': 'Analyst',
-  'Тестировщик': 'Tester',
-  'Frontend-разработчик': 'Frontend Developer',
-  'Backend-разработчик': 'Backend Developer',
-  'Fullstack-разработчик': 'Fullstack Developer',
-  'DevOps-инженер': 'DevOps Engineer',
-  'Дизайнер': 'Designer',
-  'Системный администратор': 'System Administrator',
-};
-
 function getCanonicalRole(role) {
-  const value = String(role || 'Employee').trim() || 'Employee';
-  return ROLE_ALIASES_UI[value] || value;
+  return normalizeRole(role);
 }
 
 function getPredefinedRoles() {
@@ -941,7 +919,7 @@ function logout() {
   State.currentView = 'all-issues';
   State.currentQueueId = null;
   State.currentIssueId = null;
-  State.filters = { status: [], priority: [], assigneeId: '', search: '' };
+  State.filters = createEmptyFilters();
   cleanupDragState();
   closeProtectedModals();
   showLoginScreen('login');
@@ -1119,7 +1097,7 @@ function bindSidebarEvents() {
 function navigateTo(view, queueId = null) {
   State.currentView = view;
   State.currentQueueId = queueId;
-  State.filters = { status: [], priority: [], assigneeId: '', search: '' };
+  State.filters = createEmptyFilters();
   render();
 }
 
@@ -1154,7 +1132,7 @@ function deleteQueue(queueId) {
     State.currentQueueId = null;
   }
 
-  State.filters = { status: [], priority: [], assigneeId: '', search: '' };
+  State.filters = createEmptyFilters();
   render();
   showToast(t('toasts.queueDeleted', { key: result.queue.key }), 'success');
 }
@@ -1247,7 +1225,7 @@ function bindFilterEvents() {
   const resetBtn = document.getElementById('resetFilters');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      State.filters = { status: [], priority: [], assigneeId: '', search: '' };
+      State.filters = createEmptyFilters();
       renderFilterToolbar({ filters: State.filters, users: State.users });
       bindFilterEvents();
       refreshBoard(true);
@@ -1259,12 +1237,21 @@ function bindFilterEvents() {
 // NEW: status timer
 // ============================================================
 function refreshVisibleStatusTimers() {
-  document.querySelectorAll('.task-status-timer').forEach(timer => {
-    const issue = AppData.getIssueById(timer.dataset.issueId);
+  const timers = document.querySelectorAll('.task-status-timer');
+  if (!timers.length) return;
+
+  const issuesById = new Map();
+  AppData.getIssues().forEach(issue => {
+    // Match getIssueById: if IDs repeat, the first issue wins.
+    if (!issuesById.has(issue.id)) issuesById.set(issue.id, issue);
+  });
+
+  timers.forEach(timer => {
+    const issue = issuesById.get(timer.dataset.issueId);
     if (!issue) return;
     timer.dataset.status = issue.status;
     timer.dataset.statusChangedAt = issue.statusChangedAt || issue.createdAt || '';
-    timer.textContent = formatStatusTimer(issue);
+    timer.innerHTML = renderStatusTimer(issue);
   });
 }
 
@@ -1596,13 +1583,13 @@ function refreshModalComments(issueId) {
   bindCommentDeleteEvents(issueId);
 }
 
-function saveTaskFromModal(issueId) {
-  const summaryEl = document.getElementById('summaryField');
-  const descriptionEl = document.getElementById('descriptionField');
-  const statusEl = document.getElementById('statusSelect');
-  const priorityEl = document.getElementById('prioritySelect');
-  const typeEl = document.getElementById('typeSelect');
-  const assigneeEl = document.getElementById('assigneeSelect');
+function saveTaskForm(issueId, fieldIds, onSaved) {
+  const summaryEl = document.getElementById(fieldIds.summary);
+  const descriptionEl = document.getElementById(fieldIds.description);
+  const statusEl = document.getElementById(fieldIds.status);
+  const priorityEl = document.getElementById(fieldIds.priority);
+  const typeEl = document.getElementById(fieldIds.type);
+  const assigneeEl = document.getElementById(fieldIds.assignee);
 
   if (!summaryEl) return;
 
@@ -1622,8 +1609,19 @@ function saveTaskFromModal(issueId) {
     assigneeId: assigneeEl && assigneeEl.value ? assigneeEl.value : null,
   });
 
-  closeModal();
+  onSaved();
   showToast(t('toasts.issueSaved'), 'success');
+}
+
+function saveTaskFromModal(issueId) {
+  saveTaskForm(issueId, {
+    summary: 'summaryField',
+    description: 'descriptionField',
+    status: 'statusSelect',
+    priority: 'prioritySelect',
+    type: 'typeSelect',
+    assignee: 'assigneeSelect',
+  }, closeModal);
 }
 
 // ============================================================
@@ -2130,33 +2128,14 @@ function refreshStandaloneComments(issueId) {
 }
 
 function saveStandaloneTask(issueId) {
-  const summaryEl = document.getElementById('taskPageSummary');
-  const descriptionEl = document.getElementById('taskPageDescription');
-  const statusEl = document.getElementById('taskPageStatus');
-  const priorityEl = document.getElementById('taskPagePriority');
-  const typeEl = document.getElementById('taskPageType');
-  const assigneeEl = document.getElementById('taskPageAssignee');
-
-  if (!summaryEl) return;
-
-  const summary = summaryEl.value.trim();
-  if (!summary) {
-    showToast(t('errors.summaryCannotBeEmpty'), 'error');
-    summaryEl.focus();
-    return;
-  }
-
-  AppData.updateIssue(issueId, {
-    summary,
-    description: descriptionEl ? descriptionEl.value : '',
-    status: statusEl ? statusEl.value : 'Open',
-    priority: priorityEl ? priorityEl.value : 'Medium',
-    type: typeEl ? typeEl.value : 'Task',
-    assigneeId: assigneeEl && assigneeEl.value ? assigneeEl.value : null,
-  });
-
-  renderStandaloneTaskPage(issueId);
-  showToast(t('toasts.issueSaved'), 'success');
+  saveTaskForm(issueId, {
+    summary: 'taskPageSummary',
+    description: 'taskPageDescription',
+    status: 'taskPageStatus',
+    priority: 'taskPagePriority',
+    type: 'taskPageType',
+    assignee: 'taskPageAssignee',
+  }, () => renderStandaloneTaskPage(issueId));
 }
 
 // ============================================================

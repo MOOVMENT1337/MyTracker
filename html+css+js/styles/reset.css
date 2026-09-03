@@ -1,0 +1,108 @@
+/* ============================================================
+   styles.css – visual polish / stability improvements only
+   ============================================================ */
+
+:root {
+  --color-bg: #F7F8FA;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F0F2F5;
+  --color-column-bg: #F5F7FB;
+  --color-card: #FFFFFF;
+  --color-border: #E2E6EA;
+  --color-border-2: #CDD3DA;
+  --color-text: #1A1D23;
+  --color-text-2: #5A6070;
+  --color-text-3: #9099A8;
+  --color-primary: #4F8EF7;
+  --color-primary-dk: #3672D8;
+  --color-primary-bg: #EEF4FF;
+  --color-danger: #EF4444;
+
+  --scrollbar-track: rgba(226, 230, 234, .55);
+  --scrollbar-thumb: #BDC6D2;
+
+  --sidebar-w: 260px;
+  --sidebar-w-sm: 64px;
+  --topbar-h: 56px;
+  --kanban-column-w: 296px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, .08), 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-md: 0 10px 24px rgba(16, 24, 40, .10), 0 2px 8px rgba(16, 24, 40, .06);
+  --shadow-lg: 0 18px 48px rgba(16, 24, 40, .18), 0 4px 12px rgba(16, 24, 40, .08);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  height: 100vh;
+  overflow: hidden;
+  line-height: 1.45;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+input, select, textarea {
+  font: inherit;
+}
+
+::placeholder {
+  color: var(--color-text-3);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(.95);
+}
+
+/* ============================================================
+   UTILITIES / ANIMATIONS
+   ============================================================ */
+.hidden {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

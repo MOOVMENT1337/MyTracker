@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YTracker – Project Tracker</title>
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!--<link rel="stylesheet" href="styles/styles.css" />  MAIN STYLE -->
+  <link rel="stylesheet" href="styles/reset.css" />
+  <link rel="stylesheet" href="styles/auth.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+  <link rel="stylesheet" href="styles/modals.css" />
+  <link rel="stylesheet" href="styles/drag-drop.css" />
+  <link rel="stylesheet" href="styles/themes.css" />
+  <link rel="stylesheet" href="styles/animations.css" />
+  <link rel="stylesheet" href="styles/responsive.css" />
+</head>
+<body>
+  <!-- AUTH: login screen -->
+  <div id="login-container"></div>
+
+  <div id="app-container" class="hidden">
+    <div id="app">
+      <aside id="sidebar"></aside>
+      <header id="topbar"></header>
+
+      <main id="mainArea">
+        <div id="filterToolbar"></div>
+        <div id="statsSummary"></div>
+        <div id="issueBoardContainer">
+          <div class="kanban-board" id="kanbanBoard"></div>
+        </div>
+      </main>
+    </div>
+
+    <div id="taskPageView" class="task-page-root"></div>
+
+    <div id="issueModal" class="modal-root" style="display:none;"></div>
+    <div id="createIssueModal" class="modal-root" style="display:none;"></div>
+    <div id="createQueueModal" class="modal-root" style="display:none;"></div>
+
+    <div id="settingsModal" class="modal-root" style="display:none;"></div>
+    <div id="adminPanelModal" class="modal-root" style="display:none;"></div>
+    <div id="editNameModal" class="modal-root" style="display:none;"></div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script src="scripts/data.js"></script>
+  <script src="scripts/components.js"></script>
+  <script src="scripts/script.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0a14b8209e6fba8',t:'MTc4MTE4ODAyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

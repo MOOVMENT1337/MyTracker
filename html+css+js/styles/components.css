@@ -845,10 +845,29 @@
    NEW: status timer / admin panel button
    ============================================================ */
 .task-status-timer {
-  margin-top: 8px;
-  color: var(--color-text-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+  color: var(--color-text-2);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.task-status-timer .badge {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.task-status-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .admin-panel-btn {

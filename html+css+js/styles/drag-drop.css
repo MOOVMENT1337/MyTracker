@@ -23,6 +23,7 @@ body.dragging-card {
 }
 
 .task-drag-ghost {
+  animation: none;
   position: fixed;
   top: 0;
   left: 0;

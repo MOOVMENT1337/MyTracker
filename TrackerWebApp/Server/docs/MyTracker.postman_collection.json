@@ -117,7 +117,7 @@
             "exec": [
               "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
               "pm.collectionVariables.set('employeeToken', pm.response.json().data.accessToken);",
-              "pm.collectionVariables.set('queueKey', 'API' + Date.now());"
+              "pm.collectionVariables.set('queueKey', 'API' + Array.from({ length: 7 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(''));"
             ]
           }
         }

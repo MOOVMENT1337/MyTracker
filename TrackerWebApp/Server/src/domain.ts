@@ -20,6 +20,12 @@ export function initials(name: string) {
   const parts = name.trim().split(/\s+/);
   return (parts.length === 1 ? parts[0]!.slice(0, 2) : parts[0]![0]! + parts.at(-1)![0]!).toUpperCase();
 }
+export const userColorPalette = ['#4F8EF7', '#E06C75', '#98C379', '#E5C07B', '#C678DD', '#56B6C2', '#D19A66', '#8B5CF6'] as const;
+export const socialAvatarColors = { google: '#DB4437', yandex: '#FC3F1D', mail: '#168DE2' } as const;
+export type UserProvider = 'local' | keyof typeof socialAvatarColors;
+export function userAvatarColor(userCount: number, provider: UserProvider = 'local') {
+  return provider === 'local' ? userColorPalette[userCount % userColorPalette.length]! : socialAvatarColors[provider];
+}
 export const idSchema = z.string().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/);
 const name = z.string().trim().min(1).max(120);
 const email = z.string().trim().toLowerCase().max(254).pipe(z.email());
@@ -29,7 +35,7 @@ export const registerSchema = z.strictObject({ displayName: name, email, passwor
 export const loginSchema = z.strictObject({ identifier: z.string().trim().min(1).max(254), password: z.string().min(1).max(128) });
 export const queueSchema = z.strictObject({
   name: z.string().trim().min(1).max(120),
-  key: z.string().trim().toUpperCase().regex(/^[A-Z][A-Z0-9_]{1,19}$/),
+  key: z.string().trim().toUpperCase().regex(/^[A-Z]{1,10}$/),
   color: color.default('#4F8EF7'),
 });
 export const issueSchema = z.strictObject({

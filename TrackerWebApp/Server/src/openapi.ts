@@ -35,7 +35,7 @@ route('get', '/health/live', 'Process liveness', { public: true, raw: true });
 route('get', '/health/ready', 'PostgreSQL readiness', { public: true, raw: true });
 route('get', '/api/openapi.json', 'OpenAPI contract', { public: true, raw: true });
 route('post', '/api/auth/register', 'Register an employee; 8–128 character password', { public: true, body: 'Register', result: ref('Auth'), status: 201 });
-route('post', '/api/auth/login', 'Login by email or demo alias admin', { public: true, body: 'Login', result: ref('Auth') });
+route('post', '/api/auth/login', 'Login by email or display name (case-insensitive); duplicate names require email (400 LOGIN_EMAIL_REQUIRED)', { public: true, body: 'Login', result: ref('Auth') });
 route('get', '/api/auth/me', 'Current user', { result: ref('User') });
 route('post', '/api/auth/logout', 'Revoke current session; send JSON {}', { status: 204 });
 route('post', '/api/auth/logout-all', 'Revoke all own sessions; send JSON {}', { status: 204 });

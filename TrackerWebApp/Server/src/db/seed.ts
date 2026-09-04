@@ -8,6 +8,33 @@ type Demo = {
   queues: Array<{ id: string; key: string; name: string; color: string; counter: number }>;
   issues: Array<{ id: string; key: string; queueId: string; summary: string; description: string; status: string; priority: string; type: string; assigneeId: string | null; reporterId: string; createdAt: string; updatedAt: string; statusChangedAt: string; comments: Array<{ id: string; authorId: string; text: string; createdAt: string }> }>;
 };
+// The normal development seed imports only the requested administrator.
+// Keep the full snapshot below for explicit, isolated API test fixtures.
+export async function seedAdmin(pool: Database, config: Config) {
+  if (config.NODE_ENV === 'production' || config.ALLOW_DEMO_SEED !== 'true') throw new Error('Demo seed requires ALLOW_DEMO_SEED=true and a non-production environment');
+  const data: Demo = JSON.parse(await readFile(new URL('../../seeds/demo.json', import.meta.url), 'utf8'));
+  const admin = data.users.find(user => user.email === 'admin@tracker.com' && user.isAdmin);
+  if (!admin) throw new Error('Demo administrator not found');
+  const passwordHash = await hashPassword(admin.password);
+  return transaction(pool, async db => {
+    await db.query("SELECT pg_advisory_xact_lock(hashtext(current_schema() || ':tracker-seed'))");
+    await db.query("SELECT pg_advisory_xact_lock(hashtext(current_schema() || ':tracker-users'))");
+    await db.query('CREATE TABLE IF NOT EXISTS seed_history (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
+    if ((await db.query("SELECT 1 FROM seed_history WHERE name='demo-admin-v1'")).rowCount) return { seeded: false };
+    const existing = (await db.query('SELECT id,email,is_admin FROM users WHERE id=$1 OR email=$2 FOR UPDATE', [admin.id, admin.email])).rows;
+    if (existing.length) {
+      if (existing.length === 1 && existing[0].id === admin.id && existing[0].email === admin.email && existing[0].is_admin) {
+        await db.query("INSERT INTO seed_history (name) VALUES ('demo-admin-v1')");
+        return { seeded: false };
+      }
+      throw new Error('Demo administrator ID/email already belongs to another account; existing users were not modified');
+    }
+    await db.query(`INSERT INTO users (id,email,password_hash,display_name,initials,avatar,avatar_color,role,is_admin,provider)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, [admin.id,admin.email,passwordHash,admin.displayName,admin.initials,admin.avatar,admin.avatarColor,admin.role,true,admin.provider]);
+    await db.query("INSERT INTO seed_history (name) VALUES ('demo-admin-v1')");
+    return { seeded: true, users: 1, queues: 0, issues: 0 };
+  });
+}
 export async function seedDemo(pool: Database, config: Config) {
   if (config.NODE_ENV === 'production' || config.ALLOW_DEMO_SEED !== 'true') throw new Error('Demo seed requires ALLOW_DEMO_SEED=true and a non-production environment');
   const data: Demo = JSON.parse(await readFile(new URL('../../seeds/demo.json', import.meta.url), 'utf8'));
@@ -15,6 +42,7 @@ export async function seedDemo(pool: Database, config: Config) {
   for (const user of data.users) hashes.set(user.id, await hashPassword(user.password));
   return transaction(pool, async db => {
     await db.query("SELECT pg_advisory_xact_lock(hashtext(current_schema() || ':tracker-seed'))");
+    await db.query("SELECT pg_advisory_xact_lock(hashtext(current_schema() || ':tracker-users'))");
     await db.query('CREATE TABLE IF NOT EXISTS seed_history (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
     if ((await db.query("SELECT 1 FROM seed_history WHERE name='demo-v1'")).rowCount) return { seeded: false };
     // Refuse to merge defaults into a populated database or overwrite real users.

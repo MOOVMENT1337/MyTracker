@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
     "db:migrate": "tsx src/db/cli.ts migrate",
     "db:seed": "tsx src/db/cli.ts seed",
+    "db:seed:full-demo": "tsx src/db/cli.ts seed-full-demo",
     "admin:create": "tsx src/db/cli.ts admin",
     "test": "tsx --test --test-concurrency=1 test/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build"

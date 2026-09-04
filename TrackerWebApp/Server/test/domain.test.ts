@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { hashPassword, verifyPassword, digest, token } from '../src/security.js';
-import { filterSchema, initials, issuePatchSchema, queueSchema, registerSchema } from '../src/domain.js';
+import { filterSchema, initials, issuePatchSchema, queueSchema, registerSchema, userAvatarColor } from '../src/domain.js';
 import { parseProfile } from '../src/services/oauth.js';
 
 test('scrypt passwords are salted; wrong and absent passwords fail', async () => {
@@ -32,7 +34,21 @@ test('query validation handles repeated filters and boolean strings', () => {
 });
 test('queue keys and initials match the demo', () => {
   assert.equal(queueSchema.parse({ name: 'Dev', key: ' dev ' }).key, 'DEV');
+  for (const key of ['A', 'ABCDEFGHIJ']) assert.equal(queueSchema.parse({ name: 'Demo', key }).key, key);
+  for (const key of ['', 'ABCDEFGHIJK', 'DEV1', 'DEV_QA', 'DEV-QA', 'ДЕВ']) {
+    assert.equal(queueSchema.safeParse({ name: 'Demo', key }).success, false, key);
+  }
   assert.equal(initials('Alice Johnson'), 'AJ'); assert.equal(initials('Admin'), 'AD');
+});
+test('local avatar palette follows the actual demo over two complete cycles', () => {
+  const source = readFileSync(new URL('../../../html+css+js/scripts/data.js', import.meta.url), 'utf8');
+  const colors: string[] = runInNewContext(source + '\nUSER_COLOR_PALETTE');
+  for (let index = 0; index < colors.length * 2; index++) {
+    assert.equal(userAvatarColor(index), colors[index % colors.length]);
+  }
+  assert.equal(userAvatarColor(6, 'google'), '#DB4437');
+  assert.equal(userAvatarColor(6, 'yandex'), '#FC3F1D');
+  assert.equal(userAvatarColor(6, 'mail'), '#168DE2');
 });
 test('OAuth profiles require identity and Google verified email', () => {
   assert.throws(() => parseProfile('google', { sub: '1', email: 'a@example.com', name: 'A', email_verified: false }));

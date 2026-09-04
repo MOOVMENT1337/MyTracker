@@ -75,7 +75,7 @@ test('migrations and seed are repeatable and production seed is blocked', async 
   await migrate(db.pool);
   assert.equal((await seedDemo(db.pool, config)).seeded, false);
   await assert.rejects(() => seedDemo(db.pool, { ...config, NODE_ENV: 'production' }), /non-production/);
-  assert.equal(Number((await db.pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count), 1);
+  assert.equal(Number((await db.pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count), 2);
 });
 test('all 6 demo users, 3 queues, 12 issues and 9 comments are preserved', async () => {
   const users = await request('/api/users', { token: aliceToken });
@@ -100,6 +100,7 @@ test('registration normalizes email, rejects duplicate and privilege injection',
   assert.equal(result.status, 201);
   assert.equal(result.body.data.user.email, 'new@example.com');
   assert.equal(result.body.data.user.isAdmin, false);
+  assert.equal(result.body.data.user.avatarColor, '#D19A66');
   assert.equal((await request('/api/auth/me', { token: result.body.data.accessToken })).body.data.id, result.body.data.user.id);
   assert.equal((await request('/api/auth/register', { method: 'POST', body })).status, 409);
   assert.equal((await request('/api/auth/register', { method: 'POST', body: { ...body, isAdmin: true } })).status, 400);
@@ -236,6 +237,7 @@ test('OAuth exchanges code server-side, validates cookie, and prevents replay (m
   const result = await request(flow.path, { headers: flow.headers });
   assert.equal(result.status, 200, JSON.stringify(result.body)); assert.equal(result.body.data.user.provider, 'google');
   assert.equal(result.body.data.user.isAdmin, false); assert.ok(seenVerifier);
+  assert.equal(result.body.data.user.avatarColor, '#DB4437');
   assert.equal((await request(flow.path, { headers: flow.headers })).status, 400);
   const repeat = await oauthStart();
   assert.equal((await request(repeat.path, { headers: repeat.headers })).body.data.user.id, result.body.data.user.id);

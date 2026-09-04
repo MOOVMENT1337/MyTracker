@@ -74,11 +74,10 @@ async function compare(current, reference, name, info, selector) {
   expect(different / (a.width * a.height), name).toBeLessThan(0.005);
 }
 
-test("the nine active stylesheets are copied byte for byte", async () => {
+test("unchanged migration stylesheets are copied byte for byte", async () => {
+  // Auth tabs and collapsed sidebar layout intentionally differ after UI fixes.
   for (const name of [
     "reset",
-    "auth",
-    "layout",
     "components",
     "modals",
     "drag-drop",

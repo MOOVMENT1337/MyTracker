@@ -20,15 +20,6 @@ export default function Login({ onLogin, initializing, initialError }) {
             <p>{auth("subtitle")}</p>
           </div>
         </div>
-        <div className="auth-tabs" aria-label="Authentication mode">
-          <button
-            type="button"
-            className="auth-tab active"
-            data-auth-mode="login"
-          >
-            {auth("signIn")}
-          </button>
-        </div>
         <div className="auth-error" id="authError" role="alert" hidden={!error}>
           {error}
         </div>

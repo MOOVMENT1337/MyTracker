@@ -5,6 +5,7 @@ export function Sidebar({
   view,
   queueId,
   navigate,
+  collapsed,
   toggle,
   createQueue,
   admin,
@@ -33,9 +34,17 @@ export function Sidebar({
         </div>
         <span className="logo-text">YTracker</span>
         <button
+          type="button"
           className="sidebar-collapse-btn"
           id="sidebarToggle"
-          title={t("tooltips.toggleSidebar")}
+          title={t(
+            collapsed ? "tooltips.expandSidebar" : "tooltips.collapseSidebar",
+          )}
+          aria-label={t(
+            collapsed ? "tooltips.expandSidebar" : "tooltips.collapseSidebar",
+          )}
+          aria-expanded={!collapsed}
+          aria-controls="sidebar"
           onClick={toggle}
         >
           <Icon name="fa-solid fa-chevron-left" />

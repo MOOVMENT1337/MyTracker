@@ -5,6 +5,7 @@ import { migrate } from './migrate.js';
 import { seedAdmin, seedDemo } from './seed.js';
 import { insertUser } from '../services/users.js';
 import { hashPassword } from '../security.js';
+import { resetWorkspace } from './reset.js';
 
 const config = readConfig();
 const pool = createPool(config);
@@ -13,6 +14,7 @@ try {
     case 'migrate': await migrate(pool); console.log('Migrations applied.'); break;
     case 'seed': console.log(await seedAdmin(pool, config)); break;
     case 'seed-full-demo': console.log(await seedDemo(pool, config)); break;
+    case 'reset': console.log(await resetWorkspace(pool, process.env.KEEP_ADMIN_ID)); break;
     case 'admin': {
       const data = z.object({
         ADMIN_EMAIL: z.string().trim().toLowerCase().pipe(z.email()),
@@ -25,7 +27,7 @@ try {
       console.log('Administrator created. Existing users were not modified.');
       break;
     }
-    default: throw new Error('Expected migrate, seed, seed-full-demo, or admin');
+    default: throw new Error('Expected migrate, seed, seed-full-demo, reset, or admin');
   }
 } catch (error) {
   // Avoid printing configuration values or database error details containing credentials.

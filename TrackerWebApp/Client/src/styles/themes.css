@@ -1,0 +1,24 @@
+body.dark-theme {
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-surface-2: #1e1e2f;
+  --color-column-bg: #16213e;
+  --color-card: #0f3460;
+  --color-border: #2d2d3f;
+  --color-border-2: #3a3a4f;
+  --color-text: #e0e0e0;
+  --color-text-2: #c3cae0;
+  --color-text-3: #8f97ab;
+  --color-primary-bg: rgba(79, 142, 247, .18);
+  --scrollbar-track: rgba(45, 45, 63, .65);
+  --scrollbar-thumb: #58617b;
+}
+
+body.dark-theme .badge-open       { background: rgba(148, 163, 184, .18); color: #cbd5e1; }
+body.dark-theme .badge-inprogress { background: rgba(79, 142, 247, .18); color: #bfdbfe; }
+body.dark-theme .badge-needinfo   { background: rgba(245, 158, 11, .18); color: #fde68a; }
+body.dark-theme .badge-done       { background: rgba(34, 197, 94, .18); color: #bbf7d0; }
+body.dark-theme .badge-closed     { background: rgba(107, 114, 128, .22); color: #d1d5db; }
+body.dark-theme .badge-high       { background: rgba(239, 68, 68, .18); color: #fecaca; }
+body.dark-theme .badge-medium     { background: rgba(245, 158, 11, .18); color: #fde68a; }
+body.dark-theme .badge-low        { background: rgba(148, 163, 184, .16); color: #cbd5e1; }

@@ -1,0 +1,32 @@
+{
+  "name": "tracker-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "playwright test",
+    "test:empty": "playwright test --config playwright.empty.config.js",
+    "test:serve": "node --import ../Server/node_modules/tsx/dist/loader.mjs tests/server.ts",
+    "test:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.2.8",
+    "@fortawesome/fontawesome-free": "6.5.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "@vitejs/plugin-react": "5.0.4",
+    "pixelmatch": "7.1.0",
+    "pngjs": "7.0.0",
+    "prettier": "3.6.2",
+    "vite": "7.1.7"
+  }
+}

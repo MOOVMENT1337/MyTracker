@@ -1,0 +1,37 @@
+body.dragging-card {
+  user-select: none;
+  cursor: grabbing;
+}
+
+.kanban-column.drag-over {
+  background: linear-gradient(0deg, rgba(79, 142, 247, .08), rgba(79, 142, 247, .08)), var(--color-column-bg);
+  box-shadow: 0 0 0 2px rgba(79, 142, 247, .18), var(--shadow-md);
+  transform: translateY(-2px);
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -2px;
+}
+
+.task-card.dragging {
+  opacity: .4;
+  transform: scale(.98) rotate(2deg);
+  transition: none !important;
+}
+
+.task-drag-ghost,
+.task-drag-ghost * {
+  transition: none !important;
+}
+
+.task-drag-ghost {
+  animation: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  opacity: .95;
+  transform: translate(-9999px, -9999px);
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+  filter: saturate(1.02);
+}

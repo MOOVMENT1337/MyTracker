@@ -28,9 +28,10 @@ export async function issueSession(db: Queryable, user: PublicUser, ttlHours: nu
   await db.query('INSERT INTO sessions (token_hash,user_id,expires_at) VALUES ($1,$2,$3)', [digest(accessToken), user.id, expiresAt]);
   return { user, accessToken, tokenType: 'Bearer', expiresAt };
 }
-export async function register(pool: Database, input: { email: string; displayName: string; password: string }, ttl: number) {
+export async function createUser(pool: Database, actor: PublicUser, input: { email: string; displayName: string; password: string }) {
+  requireAdmin(actor);
   const passwordHash = await hashPassword(input.password);
-  return transaction(pool, async db => issueSession(db, await insertUser(db, { ...input, passwordHash }), ttl));
+  return transaction(pool, db => insertUser(db, { ...input, passwordHash }));
 }
 export async function login(pool: Database, identifier: string, password: string, ttl: number) {
   const normalized = identifier.trim().toLowerCase();

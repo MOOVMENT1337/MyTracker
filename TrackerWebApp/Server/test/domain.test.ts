@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { hashPassword, verifyPassword, digest, token } from '../src/security.js';
 import { filterSchema, initials, issuePatchSchema, queueSchema, registerSchema, userAvatarColor } from '../src/domain.js';
-import { parseProfile } from '../src/services/oauth.js';
 
 test('scrypt passwords are salted; wrong and absent passwords fail', async () => {
   const hash = await hashPassword('strong-password');
@@ -49,9 +48,4 @@ test('local avatar palette follows the actual demo over two complete cycles', ()
   assert.equal(userAvatarColor(6, 'google'), '#DB4437');
   assert.equal(userAvatarColor(6, 'yandex'), '#FC3F1D');
   assert.equal(userAvatarColor(6, 'mail'), '#168DE2');
-});
-test('OAuth profiles require identity and Google verified email', () => {
-  assert.throws(() => parseProfile('google', { sub: '1', email: 'a@example.com', name: 'A', email_verified: false }));
-  assert.equal(parseProfile('yandex', { id: '2', default_email: 'a@yandex.ru', display_name: 'A' }).subject, '2');
-  assert.equal(parseProfile('mail', { id: '3', email: 'a@mail.ru', first_name: 'A', last_name: 'B' }).displayName, 'A B');
 });

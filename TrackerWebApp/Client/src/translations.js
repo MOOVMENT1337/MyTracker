@@ -119,6 +119,8 @@ export const translations = {
     },
     tooltips: {
       toggleSidebar: 'Toggle sidebar',
+      collapseSidebar: 'Collapse sidebar',
+      expandSidebar: 'Expand sidebar',
       toggleMenu: 'Toggle menu',
     },
     confirm: {
@@ -288,6 +290,8 @@ export const translations = {
     },
     tooltips: {
       toggleSidebar: 'Свернуть боковую панель',
+      collapseSidebar: 'Свернуть боковую панель',
+      expandSidebar: 'Развернуть боковую панель',
       toggleMenu: 'Открыть меню',
     },
     confirm: {

@@ -1,0 +1,354 @@
+{
+  "users": [
+    {
+      "id": "admin1",
+      "email": "admin@tracker.com",
+      "password": "admin123",
+      "displayName": "Admin",
+      "avatar": "AD",
+      "initials": "AD",
+      "avatarColor": "#8B5CF6",
+      "role": "Administrator",
+      "isAdmin": true,
+      "provider": "local"
+    },
+    {
+      "id": "u1",
+      "email": "alice@example.com",
+      "password": "pass123",
+      "displayName": "Alice Johnson",
+      "avatar": "AJ",
+      "initials": "AJ",
+      "avatarColor": "#4F8EF7",
+      "role": "Employee",
+      "isAdmin": false,
+      "provider": "local"
+    },
+    {
+      "id": "u2",
+      "email": "bob@example.com",
+      "password": "pass456",
+      "displayName": "Bob Smith",
+      "avatar": "BS",
+      "initials": "BS",
+      "avatarColor": "#E06C75",
+      "role": "Employee",
+      "isAdmin": false,
+      "provider": "local"
+    },
+    {
+      "id": "u3",
+      "email": "carol@example.com",
+      "password": "carol123",
+      "displayName": "Carol White",
+      "avatar": "CW",
+      "initials": "CW",
+      "avatarColor": "#98C379",
+      "role": "Employee",
+      "isAdmin": false,
+      "provider": "local"
+    },
+    {
+      "id": "u4",
+      "email": "david@example.com",
+      "password": "david123",
+      "displayName": "David Lee",
+      "avatar": "DL",
+      "initials": "DL",
+      "avatarColor": "#E5C07B",
+      "role": "Employee",
+      "isAdmin": false,
+      "provider": "local"
+    },
+    {
+      "id": "u5",
+      "email": "eva@example.com",
+      "password": "eva123",
+      "displayName": "Eva Martinez",
+      "avatar": "EM",
+      "initials": "EM",
+      "avatarColor": "#C678DD",
+      "role": "Employee",
+      "isAdmin": false,
+      "provider": "local"
+    }
+  ],
+  "queues": [
+    {
+      "id": "q1",
+      "key": "DEV",
+      "name": "Development",
+      "color": "#4F8EF7",
+      "counter": 6
+    },
+    {
+      "id": "q2",
+      "key": "DESIGN",
+      "name": "Design",
+      "color": "#C678DD",
+      "counter": 3
+    },
+    {
+      "id": "q3",
+      "key": "QA",
+      "name": "Quality Assurance",
+      "color": "#98C379",
+      "counter": 3
+    }
+  ],
+  "issues": [
+    {
+      "id": "i1",
+      "key": "DEV-1",
+      "queueId": "q1",
+      "summary": "Set up CI/CD pipeline",
+      "description": "Configure GitHub Actions for automated build and deploy.\n\nSteps:\n1. Create workflow YAML\n2. Add secrets\n3. Test deployment",
+      "status": "Done",
+      "priority": "High",
+      "type": "Task",
+      "assigneeId": "u1",
+      "reporterId": "u2",
+      "createdAt": "2026-08-24T17:38:42.079Z",
+      "updatedAt": "2026-09-01T17:38:42.080Z",
+      "statusChangedAt": "2026-09-01T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c1",
+          "authorId": "u2",
+          "text": "Pipeline is ready for review.",
+          "createdAt": "2026-08-31T17:38:42.080Z"
+        },
+        {
+          "id": "c2",
+          "authorId": "u1",
+          "text": "Reviewed and approved. Merging now.",
+          "createdAt": "2026-09-01T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i2",
+      "key": "DEV-2",
+      "queueId": "q1",
+      "summary": "Fix login page redirect bug",
+      "description": "After login, users are redirected to /home instead of their original destination. Need to preserve the `redirect` query param.",
+      "status": "In Progress",
+      "priority": "High",
+      "type": "Bug",
+      "assigneeId": "u2",
+      "reporterId": "u1",
+      "createdAt": "2026-08-27T17:38:42.080Z",
+      "updatedAt": "2026-09-02T17:38:42.080Z",
+      "statusChangedAt": "2026-09-02T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c3",
+          "authorId": "u1",
+          "text": "Can reproduce consistently. Looking into AuthGuard.",
+          "createdAt": "2026-09-02T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i3",
+      "key": "DEV-3",
+      "queueId": "q1",
+      "summary": "Implement dark mode toggle",
+      "description": "Add a system-preference-aware dark mode. Store preference in localStorage. Apply CSS variables for theming.",
+      "status": "Open",
+      "priority": "Medium",
+      "type": "Story",
+      "assigneeId": "u3",
+      "reporterId": "u1",
+      "createdAt": "2026-08-29T17:38:42.080Z",
+      "updatedAt": "2026-08-29T17:38:42.080Z",
+      "statusChangedAt": "2026-08-29T17:38:42.080Z",
+      "comments": []
+    },
+    {
+      "id": "i4",
+      "key": "DEV-4",
+      "queueId": "q1",
+      "summary": "Database migration for v2 schema",
+      "description": "Migrate users table to new schema. Add `preferences` JSON column and backfill defaults.",
+      "status": "Need Info",
+      "priority": "High",
+      "type": "Task",
+      "assigneeId": "u4",
+      "reporterId": "u2",
+      "createdAt": "2026-08-26T17:38:42.080Z",
+      "updatedAt": "2026-08-30T17:38:42.080Z",
+      "statusChangedAt": "2026-08-30T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c4",
+          "authorId": "u2",
+          "text": "What is the rollback plan if migration fails?",
+          "createdAt": "2026-08-30T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i5",
+      "key": "DEV-5",
+      "queueId": "q1",
+      "summary": "Add pagination to issues API",
+      "description": "API currently returns all issues. Add cursor-based pagination with `limit` and `cursor` params.",
+      "status": "Open",
+      "priority": "Medium",
+      "type": "Task",
+      "assigneeId": "u1",
+      "reporterId": "u3",
+      "createdAt": "2026-08-31T17:38:42.080Z",
+      "updatedAt": "2026-08-31T17:38:42.080Z",
+      "statusChangedAt": "2026-08-31T17:38:42.080Z",
+      "comments": []
+    },
+    {
+      "id": "i6",
+      "key": "DEV-6",
+      "queueId": "q1",
+      "summary": "Security audit – dependency vulnerabilities",
+      "description": "Run `npm audit` and resolve all high/critical vulnerabilities in package.json.",
+      "status": "Closed",
+      "priority": "High",
+      "type": "Task",
+      "assigneeId": "u5",
+      "reporterId": "u1",
+      "createdAt": "2026-08-19T17:38:42.080Z",
+      "updatedAt": "2026-08-28T17:38:42.080Z",
+      "statusChangedAt": "2026-08-28T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c5",
+          "authorId": "u5",
+          "text": "All 3 critical CVEs patched and verified.",
+          "createdAt": "2026-08-28T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i7",
+      "key": "DESIGN-1",
+      "queueId": "q2",
+      "summary": "Redesign dashboard home screen",
+      "description": "New Figma mockups need to be implemented. Focus on widget layout and data visualization.",
+      "status": "In Progress",
+      "priority": "High",
+      "type": "Story",
+      "assigneeId": "u3",
+      "reporterId": "u1",
+      "createdAt": "2026-08-28T17:38:42.080Z",
+      "updatedAt": "2026-09-02T17:38:42.080Z",
+      "statusChangedAt": "2026-09-02T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c6",
+          "authorId": "u1",
+          "text": "Figma link shared in Slack.",
+          "createdAt": "2026-08-29T17:38:42.080Z"
+        },
+        {
+          "id": "c7",
+          "authorId": "u3",
+          "text": "Working on responsive breakpoints.",
+          "createdAt": "2026-09-02T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i8",
+      "key": "DESIGN-2",
+      "queueId": "q2",
+      "summary": "Create icon set for mobile app",
+      "description": "Design 40+ icons in 24px and 48px variants. Export as SVG and PNG@2x.",
+      "status": "Open",
+      "priority": "Medium",
+      "type": "Task",
+      "assigneeId": "u3",
+      "reporterId": "u4",
+      "createdAt": "2026-08-30T17:38:42.080Z",
+      "updatedAt": "2026-08-30T17:38:42.080Z",
+      "statusChangedAt": "2026-08-30T17:38:42.080Z",
+      "comments": []
+    },
+    {
+      "id": "i9",
+      "key": "DESIGN-3",
+      "queueId": "q2",
+      "summary": "Update color palette for accessibility (WCAG 2.1 AA)",
+      "description": "Current primary blue fails contrast on white backgrounds. Need to update to #2B6CB0 or similar.",
+      "status": "Need Info",
+      "priority": "Medium",
+      "type": "Bug",
+      "assigneeId": "u5",
+      "reporterId": "u3",
+      "createdAt": "2026-08-25T17:38:42.080Z",
+      "updatedAt": "2026-08-31T17:38:42.080Z",
+      "statusChangedAt": "2026-08-31T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c8",
+          "authorId": "u3",
+          "text": "Which backgrounds are affected – all white or just specific components?",
+          "createdAt": "2026-08-31T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i10",
+      "key": "QA-1",
+      "queueId": "q3",
+      "summary": "Write E2E tests for checkout flow",
+      "description": "Use Playwright to cover: add to cart → review → payment → confirmation. Mock payment API.",
+      "status": "In Progress",
+      "priority": "High",
+      "type": "Task",
+      "assigneeId": "u4",
+      "reporterId": "u2",
+      "createdAt": "2026-08-29T17:38:42.080Z",
+      "updatedAt": "2026-09-03T17:38:42.080Z",
+      "statusChangedAt": "2026-09-03T17:38:42.080Z",
+      "comments": [
+        {
+          "id": "c9",
+          "authorId": "u4",
+          "text": "Cart and review steps done. Working on payment mock.",
+          "createdAt": "2026-09-03T17:38:42.080Z"
+        }
+      ]
+    },
+    {
+      "id": "i11",
+      "key": "QA-2",
+      "queueId": "q3",
+      "summary": "Performance regression: search page 3s load time",
+      "description": "After the v2.3 release, search page load time increased from ~400ms to ~3000ms on prod. Profiling shows N+1 query issue.",
+      "status": "Open",
+      "priority": "High",
+      "type": "Bug",
+      "assigneeId": "u2",
+      "reporterId": "u4",
+      "createdAt": "2026-09-01T17:38:42.080Z",
+      "updatedAt": "2026-09-01T17:38:42.080Z",
+      "statusChangedAt": "2026-09-01T17:38:42.080Z",
+      "comments": []
+    },
+    {
+      "id": "i12",
+      "key": "QA-3",
+      "queueId": "q3",
+      "summary": "Test matrix for browser compatibility",
+      "description": "Test on Chrome 120+, Firefox 121+, Safari 17+, Edge 120+. Mobile: iOS Safari, Android Chrome.",
+      "status": "Open",
+      "priority": "Low",
+      "type": "Task",
+      "assigneeId": "u5",
+      "reporterId": "u1",
+      "createdAt": "2026-09-02T17:38:42.080Z",
+      "updatedAt": "2026-09-02T17:38:42.080Z",
+      "statusChangedAt": "2026-09-02T17:38:42.080Z",
+      "comments": []
+    }
+  ]
+}

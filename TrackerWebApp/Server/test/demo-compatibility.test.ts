@@ -12,11 +12,6 @@ let server: Server | undefined;
 let base: string;
 let adminToken: string;
 const colors = ['#4F8EF7', '#E06C75', '#98C379', '#E5C07B', '#C678DD', '#56B6C2', '#D19A66', '#8B5CF6'];
-const oauthFetch: typeof fetch = async (url) => {
-  if (String(url).endsWith('/token')) return Response.json({ access_token: 'mock-token' });
-  const provider = String(url).includes('googleapis') ? 'google' : String(url).includes('yandex') ? 'yandex' : 'mail';
-  return Response.json({ sub: provider, id: provider, email: `${provider}@example.com`, default_email: `${provider}@example.com`, name: `${provider} User`, display_name: `${provider} User`, email_verified: true });
-};
 async function request(path: string, options: { body?: unknown; token?: string; method?: string; cookie?: string } = {}) {
   const response = await fetch(base + path, {
     redirect: 'manual', method: options.method || (options.body === undefined ? 'GET' : 'POST'),
@@ -26,7 +21,11 @@ async function request(path: string, options: { body?: unknown; token?: string; 
   const text = await response.text();
   return { status: response.status, headers: response.headers, body: text && response.headers.get('content-type')?.includes('json') ? JSON.parse(text) : text };
 }
-const register = (displayName: string, email: string, password = 'secure-password') => request('/api/auth/register', { body: { displayName, email, password } });
+const register = async (displayName: string, email: string, password = 'secure-password') => {
+  const result = await request('/api/users', { token: adminToken, body: { displayName, email, password } });
+  if (result.status === 201) result.body.data = { user: result.body.data };
+  return result;
+};
 const login = (identifier: string, password: string) => request('/api/auth/login', { body: { identifier, password } });
 const userCount = async () => Number((await db.pool.query('SELECT count(*) FROM users')).rows[0].count);
 
@@ -38,7 +37,7 @@ before(async () => {
 beforeEach(async () => {
   const config = readConfig({ NODE_ENV: 'test', DATABASE_URL: db.url, LOG_LEVEL: 'silent',
     GOOGLE_CLIENT_ID: 'test', GOOGLE_CLIENT_SECRET: 'test', YANDEX_CLIENT_ID: 'test', YANDEX_CLIENT_SECRET: 'test', MAIL_CLIENT_ID: 'test', MAIL_CLIENT_SECRET: 'test' });
-  const app = createApp(db.pool, config, { oauthFetch });
+  const app = createApp(db.pool, config);
   server = await new Promise<Server>(resolve => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)); });
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
@@ -110,27 +109,6 @@ test('concurrent registrations allocate consecutive palette positions and email 
   assert.deepEqual(results.map(result => result.body.data.user.avatarColor).sort(), Array.from({ length: 8 }, (_, index) => colors[(start + index) % colors.length]).sort());
   const duplicate = await Promise.all([register('One', 'concurrent-duplicate@example.com'), register('Two', 'CONCURRENT-DUPLICATE@EXAMPLE.COM')]);
   assert.deepEqual(duplicate.map(result => result.status).sort(), [201, 409]);
-});
-test('OAuth users get provider colors and repeat login preserves their saved color', async () => {
-  for (const [provider, color] of Object.entries({ google: '#DB4437', yandex: '#FC3F1D', mail: '#168DE2' })) {
-    const signIn = async () => {
-      const start = await request(`/api/auth/oauth/${provider}`);
-      assert.equal(start.status, 302);
-      const url = new URL(start.headers.get('location')!);
-      return request(`/api/auth/oauth/${provider}/callback?code=test-code&state=${url.searchParams.get('state')}`, { cookie: start.headers.get('set-cookie')!.split(';')[0] });
-    };
-    const created = await signIn();
-    assert.equal(created.status, 200, JSON.stringify(created.body));
-    assert.equal(created.body.data.user.avatarColor, color);
-    assert.equal((await request(`/api/users/${created.body.data.user.id}`, { token: adminToken })).body.data.avatarColor, color);
-    await db.pool.query('UPDATE users SET avatar_color=$2 WHERE id=$1', [created.body.data.user.id, '#123456']);
-    const repeated = await signIn();
-    assert.equal(repeated.body.data.user.id, created.body.data.user.id);
-    assert.equal(repeated.body.data.user.avatarColor, '#123456');
-  }
-  const count = await userCount();
-  const local = await register('After OAuth', 'after-oauth@example.com');
-  assert.equal(local.body.data.user.avatarColor, colors[count % colors.length]);
 });
 test('single-letter and ten-letter queue keys work through API, numbering and lookup', async () => {
   for (const key of ['a', 'abcdefghij']) {

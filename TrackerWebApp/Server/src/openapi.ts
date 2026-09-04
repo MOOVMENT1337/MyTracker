@@ -17,7 +17,7 @@ function route(method: string, path: string, summary: string, options: { body?: 
   const parameters = [...path.matchAll(/\{(.*?)\}/g)].map(match => ({ name: match[1], in: 'path', required: true, schema: text }));
   const success = status === 204 || status === 302 ? { description: summary } : { description: summary, content: json(options.raw ? options.result || {} : object({ data: options.result || { type: 'object' } })) };
   (paths[path] ||= {})[method] = {
-    summary, tags: [path.split('/')[2] || 'health'], security: options.public ? [] : [{ bearerAuth: [] }],
+    summary, tags: [path.split('/')[2] || 'health'], security: options.public ? [] : [{ bearerAuth: [] }, { cookieAuth: [] }],
     parameters: [...parameters, ...(options.query || [])],
     ...(options.body ? { requestBody: { required: true, content: json(ref(options.body)) } } : {}),
     responses: { [status]: success, default: { description: 'Structured API error; see error.code', content: json(ref('ErrorResponse')) } },
@@ -34,14 +34,12 @@ const page = (schema: Schema) => object({ data: array(schema), pagination: objec
 route('get', '/health/live', 'Process liveness', { public: true, raw: true });
 route('get', '/health/ready', 'PostgreSQL readiness', { public: true, raw: true });
 route('get', '/api/openapi.json', 'OpenAPI contract', { public: true, raw: true });
-route('post', '/api/auth/register', 'Register an employee; 8–128 character password', { public: true, body: 'Register', result: ref('Auth'), status: 201 });
-route('post', '/api/auth/login', 'Login by email or display name (case-insensitive); duplicate names require email (400 LOGIN_EMAIL_REQUIRED)', { public: true, body: 'Login', result: ref('Auth') });
+route('post', '/api/users', 'Admin: create employee with 8–128 character password; returns user, never signs in as them', { body: 'CreateUser', result: ref('User'), status: 201 });
+route('post', '/api/auth/login', 'Login by email or display name. X-Tracker-Browser: 1 sets an HttpOnly session cookie and omits the token from JSON; other clients receive Bearer auth', { public: true, body: 'Login', result: { oneOf: [ref('Auth'), ref('BrowserAuth')] } });
 route('get', '/api/auth/me', 'Current user', { result: ref('User') });
 route('post', '/api/auth/logout', 'Revoke current session; send JSON {}', { status: 204 });
 route('post', '/api/auth/logout-all', 'Revoke all own sessions; send JSON {}', { status: 204 });
-route('get', '/api/auth/providers', 'Configured OAuth providers', { public: true, result: array(object({ id: text, enabled: { type: 'boolean' } })) });
-route('get', '/api/auth/oauth/{provider}', 'Start Google/Yandex/Mail OAuth in a browser; sets HttpOnly state cookie', { public: true, status: 302 });
-route('get', '/api/auth/oauth/{provider}/callback', 'OAuth callback; requires matching browser cookie, returns session JSON', { public: true, result: ref('Auth'), query: [{ name: 'code', in: 'query', required: true, schema: text }, { name: 'state', in: 'query', required: true, schema: text }] });
+route('get', '/api/auth/providers', 'No external sign-in providers; returns an empty list', { public: true, result: array(object({ id: text, enabled: { type: 'boolean' } })) });
 route('get', '/api/metadata', 'Statuses, priorities, types, roles and suggested transitions');
 route('get', '/api/users', 'Users without passwords or password hashes', { raw: true, result: page(ref('User')), query: pageQueries });
 route('get', '/api/users/{id}', 'User details', { result: ref('User') });
@@ -69,12 +67,13 @@ export const openapi = {
   openapi: '3.1.0', info: { title: 'MyTracker API', version: '1.0.0', description: 'Single shared workspace matching the html+css+js demo. Bearer sessions; JSON requests. Admin rights are independent from job titles.' },
   servers: [{ url: 'http://localhost:3000' }], paths,
   components: {
-    securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'opaque session token' } },
+    securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'opaque session token' }, cookieAuth: { type: 'apiKey', in: 'cookie', name: 'tracker_session', description: 'Mutations require X-Tracker-Browser: 1 and an allowed Origin. Same-origin /api recommended.' } },
     schemas: {
       User: user, Queue: queue, Comment: comment, Issue: issue,
       Auth: object({ user: ref('User'), accessToken: text, tokenType: { const: 'Bearer' }, expiresAt: date }),
+      BrowserAuth: object({ user: ref('User'), expiresAt: date }),
       ErrorResponse: object({ error: object({ code: text, message: text, requestId: text, details: { type: 'array', items: { type: 'object' } } }, ['code','message','requestId']) }),
-      ...Object.fromEntries(Object.entries({ Register: registerSchema, Login: loginSchema, QueueInput: queueSchema, IssueInput: issueSchema, IssuePatch: issuePatchSchema, CommentInput: commentSchema, UserPatch: userPatchSchema, Settings: settingsSchema }).map(([name, schema]) => [name, z.toJSONSchema(schema, { io: 'input' })])),
+      ...Object.fromEntries(Object.entries({ CreateUser: registerSchema, Login: loginSchema, QueueInput: queueSchema, IssueInput: issueSchema, IssuePatch: issuePatchSchema, CommentInput: commentSchema, UserPatch: userPatchSchema, Settings: settingsSchema }).map(([name, schema]) => [name, z.toJSONSchema(schema, { io: 'input' })])),
     },
   },
 };

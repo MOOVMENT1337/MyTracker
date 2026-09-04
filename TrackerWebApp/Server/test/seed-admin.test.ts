@@ -20,6 +20,8 @@ test('admin-only seed imports only the requested admin and never resets or resto
     assert.equal(users[0].is_admin, true);
     assert.equal(users[0].display_name, 'Admin');
     assert.equal(users[0].avatar_color, '#8B5CF6');
+    assert.equal(users[0].theme, 'dark');
+    assert.equal(users[0].language, 'ru');
     assert.ok(await verifyPassword('admin123', users[0].password_hash));
     for (const table of ['queues', 'issues', 'comments']) {
       assert.equal(Number((await db.pool.query(`SELECT count(*) FROM ${table}`)).rows[0].count), 0);

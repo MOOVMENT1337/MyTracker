@@ -17,19 +17,8 @@ let aliceToken: string;
 let bobToken: string;
 let issueId: string;
 let queueId: string;
-let profileEmail = 'oauth@example.com';
-let upstreamFailure = false;
-let seenVerifier = false;
-const oauthFetch: typeof fetch = async (url, options) => {
-  if (upstreamFailure) return new Response('{}', { status: 500 });
-  if (String(url).endsWith('/token')) {
-    seenVerifier = new URLSearchParams(String(options?.body)).has('code_verifier');
-    return Response.json({ access_token: 'test-provider-token' });
-  }
-  return Response.json({ sub: profileEmail, email: profileEmail, name: 'OAuth User', email_verified: true });
-};
 async function listen() {
-  const app = createApp(db.pool, config, { oauthFetch });
+  const app = createApp(db.pool, config);
   server = await new Promise<Server>(resolve => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)); });
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
@@ -75,7 +64,7 @@ test('migrations and seed are repeatable and production seed is blocked', async 
   await migrate(db.pool);
   assert.equal((await seedDemo(db.pool, config)).seeded, false);
   await assert.rejects(() => seedDemo(db.pool, { ...config, NODE_ENV: 'production' }), /non-production/);
-  assert.equal(Number((await db.pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count), 2);
+  assert.equal(Number((await db.pool.query('SELECT count(*) FROM schema_migrations')).rows[0].count), 3);
 });
 test('all 6 demo users, 3 queues, 12 issues and 9 comments are preserved', async () => {
   const users = await request('/api/users', { token: aliceToken });
@@ -94,16 +83,21 @@ test('protected routes reject missing, fake and expired sessions', async () => {
   await db.pool.query("UPDATE sessions SET expires_at=now()-interval '1 second' WHERE token_hash=$1", [digest(accessToken)]);
   assert.equal((await request('/api/auth/me', { token: accessToken })).status, 401);
 });
-test('registration normalizes email, rejects duplicate and privilege injection', async () => {
+test('admin creates users without a session; public registration and privilege injection are rejected', async () => {
   const body = { email: ' NEW@Example.com ', displayName: 'New Employee', password: 'secure-pass123' };
-  const result = await request('/api/auth/register', { method: 'POST', body });
+  assert.equal((await request('/api/auth/register', { method: 'POST', body })).status, 403);
+  assert.equal((await request('/api/users', { method: 'POST', body })).status, 401);
+  assert.equal((await request('/api/users', { method: 'POST', token: aliceToken, body })).status, 403);
+  const result = await request('/api/users', { method: 'POST', token: adminToken, body });
   assert.equal(result.status, 201);
-  assert.equal(result.body.data.user.email, 'new@example.com');
-  assert.equal(result.body.data.user.isAdmin, false);
-  assert.equal(result.body.data.user.avatarColor, '#D19A66');
-  assert.equal((await request('/api/auth/me', { token: result.body.data.accessToken })).body.data.id, result.body.data.user.id);
-  assert.equal((await request('/api/auth/register', { method: 'POST', body })).status, 409);
-  assert.equal((await request('/api/auth/register', { method: 'POST', body: { ...body, isAdmin: true } })).status, 400);
+  assert.equal(result.body.data.email, 'new@example.com');
+  assert.equal(result.body.data.isAdmin, false);
+  assert.equal(result.body.data.avatarColor, '#D19A66');
+  assert.equal(result.body.data.accessToken, undefined);
+  assert.equal(result.headers.get('set-cookie'), null);
+  assert.equal((await request('/api/auth/me', { token: await login(body.email, body.password) })).body.data.id, result.body.data.id);
+  assert.equal((await request('/api/users', { method: 'POST', token: adminToken, body })).status, 409);
+  assert.equal((await request('/api/users', { method: 'POST', token: adminToken, body: { ...body, isAdmin: true } })).status, 400);
   assert.equal((await request('/api/auth/login', { method: 'POST', body: { identifier: body.email, password: 'wrong' } })).status, 401);
 });
 test('server enforces admin edits, custom role aliases, and no role-based escalation', async () => {
@@ -117,10 +111,10 @@ test('server enforces admin edits, custom role aliases, and no role-based escala
   assert.equal((await request('/api/users/u2', { method: 'PATCH', token: adminToken, body: { isAdmin: true } })).status, 400);
 });
 test('settings are isolated per user and survive new API instances', async () => {
-  assert.equal((await request('/api/settings', { method: 'PATCH', token: aliceToken, body: { theme: 'dark', language: 'ru' } })).status, 200);
-  assert.deepEqual((await request('/api/settings', { token: bobToken })).body.data, { theme: 'light', language: 'en' });
+  assert.equal((await request('/api/settings', { method: 'PATCH', token: aliceToken, body: { theme: 'light', language: 'en' } })).status, 200);
+  assert.deepEqual((await request('/api/settings', { token: bobToken })).body.data, { theme: 'dark', language: 'ru' });
   await stopServer(); await listen();
-  assert.deepEqual((await request('/api/settings', { token: aliceToken })).body.data, { theme: 'dark', language: 'ru' });
+  assert.deepEqual((await request('/api/settings', { token: aliceToken })).body.data, { theme: 'light', language: 'en' });
   assert.equal((await request('/api/auth/me', { token: aliceToken })).body.data.id, 'u1');
 });
 test('queue creation, normalized keys, lookup, duplicates and validation', async () => {
@@ -219,38 +213,6 @@ test('CORS, malformed JSON, mass assignment, media type and body limits are enfo
   const missing = await request('/api/not-found', { token: aliceToken });
   assert.equal(missing.status, 404); assert.ok(missing.body.error.requestId); assert.ok(!JSON.stringify(missing.body).includes('stack'));
 });
-test('OAuth is disabled without credentials and rejects forged state', async () => {
-  assert.equal((await request('/api/auth/oauth/yandex')).status, 503);
-  assert.equal((await request('/api/auth/oauth/google/callback?code=fake&state=' + 'a'.repeat(43))).status, 400);
-});
-async function oauthStart() {
-  const start = await request('/api/auth/oauth/google');
-  assert.equal(start.status, 302);
-  const url = new URL(start.headers.get('location')!);
-  assert.equal(url.searchParams.get('code_challenge_method'), 'S256');
-  const cookie = start.headers.get('set-cookie')!.split(';')[0]!;
-  return { path: `/api/auth/oauth/google/callback?code=test-code&state=${url.searchParams.get('state')}`, headers: { Cookie: cookie } };
-}
-test('OAuth exchanges code server-side, validates cookie, and prevents replay (mock provider)', async () => {
-  const flow = await oauthStart();
-  assert.equal((await request(flow.path)).status, 400);
-  const result = await request(flow.path, { headers: flow.headers });
-  assert.equal(result.status, 200, JSON.stringify(result.body)); assert.equal(result.body.data.user.provider, 'google');
-  assert.equal(result.body.data.user.isAdmin, false); assert.ok(seenVerifier);
-  assert.equal(result.body.data.user.avatarColor, '#DB4437');
-  assert.equal((await request(flow.path, { headers: flow.headers })).status, 400);
-  const repeat = await oauthStart();
-  assert.equal((await request(repeat.path, { headers: repeat.headers })).body.data.user.id, result.body.data.user.id);
-});
-test('OAuth does not merge identities by email or leak upstream failures (mock provider)', async () => {
-  profileEmail = 'alice@example.com';
-  const collision = await oauthStart();
-  assert.equal((await request(collision.path, { headers: collision.headers })).status, 409);
-  upstreamFailure = true;
-  const failed = await oauthStart();
-  assert.equal((await request(failed.path, { headers: failed.headers })).status, 502);
-  upstreamFailure = false;
-});
 test('logout and logout-all really revoke stored sessions', async () => {
   const one = await login('new@example.com', 'secure-pass123');
   const two = await login('new@example.com', 'secure-pass123');
@@ -267,4 +229,36 @@ test('authentication flood is rate limited', async () => {
   for (let i=0; i<31; i++) result = await request('/api/auth/login', { method: 'POST', body: {} });
   assert.equal(result!.status, 429);
   assert.ok(result!.headers.get('ratelimit'));
+});
+
+test('browser sessions survive refresh, omit bearer tokens, enforce CSRF and revoke on logout', async () => {
+  await stopServer(); await listen();
+  const session = await request('/api/auth/login', { method: 'POST', headers: { 'X-Tracker-Browser': '1', Origin: 'http://localhost:5173' }, body: { identifier: 'admin@tracker.com', password: 'admin123' } });
+  assert.equal(session.status, 200);
+  assert.equal(session.body.data.accessToken, undefined);
+  const setCookie = session.headers.get('set-cookie')!;
+  assert.match(setCookie, /HttpOnly/); assert.match(setCookie, /SameSite=Lax/); assert.match(setCookie, /Path=\/api/);
+  const Cookie = setCookie.split(';')[0]!;
+  assert.equal((await request('/api/auth/me', { headers: { Cookie } })).body.data.id, 'admin1');
+  assert.equal((await request('/api/settings', { method: 'PATCH', headers: { Cookie }, body: { theme: 'dark' } })).status, 403);
+  assert.equal((await request('/api/settings', { method: 'PATCH', headers: { Cookie, 'X-Tracker-Browser': '1', Origin: 'https://evil.example' }, body: { theme: 'dark' } })).status, 403);
+  assert.equal((await request('/api/settings', { method: 'PATCH', headers: { Cookie, 'X-Tracker-Browser': '1' }, body: { theme: 'dark' } })).status, 200);
+  const logout = await request('/api/auth/logout', { method: 'POST', headers: { Cookie, 'X-Tracker-Browser': '1' }, body: {} });
+  assert.equal(logout.status, 204); assert.match(logout.headers.get('set-cookie')!, /Expires=Thu, 01 Jan 1970/);
+  assert.equal((await request('/api/auth/me', { headers: { Cookie } })).status, 401);
+});
+
+test('external sign-in stays disabled even with provider credentials configured', async () => {
+  assert.deepEqual((await request('/api/auth/providers')).body.data, []);
+  const before = (await db.pool.query('SELECT count(*)::int AS count FROM sessions')).rows[0].count;
+  for (const provider of ['google', 'yandex', 'mail']) {
+    for (const path of [`/api/auth/oauth/${provider}`, `/api/auth/oauth/${provider}/callback?code=fake&state=${'a'.repeat(43)}`]) {
+      const result = await request(path);
+      assert.equal(result.status, 403);
+      assert.equal(result.body.error.code, 'EXTERNAL_AUTH_DISABLED');
+      assert.equal(result.headers.get('location'), null);
+      assert.equal(result.headers.get('set-cookie'), null);
+    }
+  }
+  assert.equal((await db.pool.query('SELECT count(*)::int AS count FROM sessions')).rows[0].count, before);
 });

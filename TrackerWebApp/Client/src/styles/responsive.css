@@ -1,0 +1,166 @@
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  #app {
+    grid-template-columns: 0 1fr;
+  }
+
+  #app.sidebar-open {
+    grid-template-columns: var(--sidebar-w) 1fr;
+  }
+
+  #sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    z-index: 300;
+  }
+
+  #app.sidebar-open #sidebar {
+    transform: translateX(0);
+  }
+
+  .hamburger-btn {
+    display: flex !important;
+  }
+
+  .sidebar-collapse-btn {
+    display: none;
+  }
+
+  #topbar {
+    padding: 0 16px;
+  }
+
+  #filterToolbar {
+    padding: 10px 16px;
+  }
+
+  #statsSummary {
+    padding: 0 16px 8px;
+  }
+
+  #issueBoardContainer {
+    padding: 0 16px 16px;
+    overflow-x: auto;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(5, minmax(280px, 300px));
+    min-width: max-content;
+  }
+
+  .issue-modal-grid,
+  .form-row,
+  .issue-meta-inline,
+  .task-page-grid,
+  .task-page-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .issue-modal-actions,
+  .task-page-actions,
+  .task-page-title-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .issue-modal-actions-right,
+  .comment-actions,
+  .form-actions,
+  .task-page-actions-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .issue-modal-actions-right .btn,
+  .comment-actions .btn,
+  .form-actions .btn,
+  .issue-modal-actions > .btn,
+  .task-page-actions .btn,
+  .task-page-actions-right .btn,
+  .task-page-actions-right a {
+    flex: 1 1 100%;
+  }
+
+  .modal-panel,
+  .modal-panel-create,
+  .modal-panel-small {
+    width: 90vw;
+    max-height: 92vh;
+  }
+
+  .comments-list {
+    max-height: 200px;
+  }
+
+  .task-page-shell {
+    padding: 20px 14px 32px;
+  }
+
+  .task-page-card {
+    padding: 18px;
+  }
+
+  .task-page-title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-right .btn span {
+    display: none;
+  }
+
+  .topbar-right .btn {
+    padding: 8px 10px;
+  }
+
+  #toastContainer {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .toast {
+    min-width: 0;
+  }
+}
+@media (max-width: 480px) {
+  .auth-shell {
+    align-items: flex-start;
+    padding: 18px 12px;
+  }
+
+  .auth-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .auth-brand {
+    align-items: flex-start;
+  }
+
+  .auth-brand h1 {
+    font-size: 20px;
+  }
+
+  .user-provider,
+  .btn-logout-top {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-provider {
+    display: none;
+  }
+}

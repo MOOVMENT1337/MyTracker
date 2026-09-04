@@ -5,16 +5,18 @@ import { rateLimit } from 'express-rate-limit';
 import { pinoHttp } from 'pino-http';
 import { pino } from 'pino';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { z } from 'zod';
 import type { Config } from './config.js';
 import type { Database } from './db/pool.js';
 import { ApiError, commentSchema, filterSchema, idSchema, issuePatchSchema, issueSchema, issueTypes, loginSchema, paginationSchema, priorities, queueSchema, registerSchema, required, roleAliases, settingsSchema, statuses, transitions, userPatchSchema, type PublicUser } from './domain.js';
 import * as users from './services/users.js';
 import * as tracker from './services/tracker.js';
-import { finishOAuth, providerSchema, startOAuth } from './services/oauth.js';
 import { openapi } from './openapi.js';
 
-export function createApp(pool: Database, config: Config, options: { oauthFetch?: typeof fetch } = {}) {
+export function createApp(pool: Database, config: Config) {
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', config.TRUST_PROXY_HOPS);
@@ -27,9 +29,9 @@ export function createApp(pool: Database, config: Config, options: { oauthFetch?
   }));
   app.use(helmet());
   app.use(cors({ origin: (origin, callback) => {
-    if (!origin || config.corsOrigins.includes(origin)) callback(null, true);
+    if (!origin || [new URL(config.PUBLIC_URL).origin, new URL(config.FRONTEND_URL).origin, ...config.corsOrigins].includes(origin)) callback(null, true);
     else callback(new ApiError(403, 'ORIGIN_NOT_ALLOWED', 'Origin is not allowed'));
-  }, allowedHeaders: ['Content-Type', 'Authorization'], exposedHeaders: ['X-Request-Id'] }));
+  }, credentials: true, allowedHeaders: ['Content-Type', 'Authorization', 'X-Tracker-Browser'], exposedHeaders: ['X-Request-Id'] }));
   app.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   app.get('/health/live', (_req, res) => res.json({ status: 'ok' }));
   app.get('/health/ready', async (_req, res) => {
@@ -50,37 +52,35 @@ export function createApp(pool: Database, config: Config, options: { oauthFetch?
     } else next();
   });
   app.get('/api/openapi.json', (_req, res) => res.json(openapi));
-  app.use('/api/auth', limiter(30, 15 * 60000));
-  app.post('/api/auth/register', async (req, res) => res.status(201).json({ data: await users.register(pool, registerSchema.parse(req.body), config.SESSION_TTL_HOURS) }));
+  app.use(['/api/auth/login', '/api/auth/register', '/api/auth/oauth'], limiter(30, 15 * 60000));
+  const sessionOptions = { httpOnly: true, secure: config.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/api' };
+  const cookie = (req: Request, name: string) => req.headers.cookie?.split(';').map(v => v.trim()).find(v => v.startsWith(`${name}=`))?.slice(name.length + 1);
+  const browserSession = (res: Response, session: Awaited<ReturnType<typeof users.login>>) => {
+    res.cookie('tracker_session', session.accessToken, { ...sessionOptions, expires: new Date(session.expiresAt) });
+    return { user: session.user, expiresAt: session.expiresAt };
+  };
+  app.post('/api/auth/register', () => { throw new ApiError(403, 'REGISTRATION_DISABLED', 'Accounts are created by an administrator'); });
   app.post('/api/auth/login', async (req, res) => {
     const input = loginSchema.parse(req.body);
-    res.json({ data: await users.login(pool, input.identifier, input.password, config.SESSION_TTL_HOURS) });
+    const session = await users.login(pool, input.identifier, input.password, config.SESSION_TTL_HOURS);
+    res.json({ data: req.get('X-Tracker-Browser') === '1' ? browserSession(res, session) : session });
   });
-  app.get('/api/auth/providers', (_req, res) => res.json({ data: Object.entries(config.oauth).map(([id, value]) => ({ id, enabled: Boolean(value.clientId && value.clientSecret) })) }));
-  const cookieOptions = { httpOnly: true, secure: config.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/api/auth/oauth', maxAge: 600000 };
-  app.get('/api/auth/oauth/:provider', async (req, res) => {
-    const provider = providerSchema.parse(req.params.provider);
-    const result = await startOAuth(pool, config, provider);
-    res.cookie(`tracker_oauth_${provider}`, result.browser, cookieOptions);
-    res.redirect(result.url);
-  });
-  app.get('/api/auth/oauth/:provider/callback', async (req, res) => {
-    const provider = providerSchema.parse(req.params.provider);
-    const query = z.object({ code: z.string().min(1).max(4096), state: z.string().regex(/^[A-Za-z0-9_-]{43}$/) }).parse(req.query);
-    const browser = req.headers.cookie?.split(';').map(v => v.trim()).find(v => v.startsWith(`tracker_oauth_${provider}=`))?.split('=')[1] || '';
-    res.clearCookie(`tracker_oauth_${provider}`, { ...cookieOptions, maxAge: undefined });
-    res.json({ data: await finishOAuth(pool, config, provider, query.code, query.state, browser, options.oauthFetch) });
-  });
+  app.get('/api/auth/providers', (_req, res) => res.json({ data: [] }));
+  app.use('/api/auth/oauth', () => { throw new ApiError(403, 'EXTERNAL_AUTH_DISABLED', 'Use your login and password'); });
   app.use('/api', async (req, res, next) => {
-    const auth = await users.authenticate(pool, req.headers.authorization);
+    const sessionCookie = cookie(req, 'tracker_session');
+    if (!req.headers.authorization && sessionCookie && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get('X-Tracker-Browser') !== '1') {
+      throw new ApiError(403, 'CSRF_REJECTED', 'Browser mutation requires X-Tracker-Browser header');
+    }
+    const auth = await users.authenticate(pool, req.headers.authorization || (sessionCookie ? `Bearer ${sessionCookie}` : undefined));
     res.locals.user = auth.user; res.locals.tokenHash = auth.tokenHash;
     next();
   });
   const actor = (res: Response): PublicUser => res.locals.user;
   const param = (req: Request, name = 'id') => idSchema.parse(req.params[name]);
   app.get('/api/auth/me', (_req, res) => res.json({ data: actor(res) }));
-  app.post('/api/auth/logout', async (_req, res) => { await pool.query('DELETE FROM sessions WHERE token_hash=$1', [res.locals.tokenHash]); res.sendStatus(204); });
-  app.post('/api/auth/logout-all', async (_req, res) => { await pool.query('DELETE FROM sessions WHERE user_id=$1', [actor(res).id]); res.sendStatus(204); });
+  app.post('/api/auth/logout', async (_req, res) => { await pool.query('DELETE FROM sessions WHERE token_hash=$1', [res.locals.tokenHash]); res.clearCookie('tracker_session', sessionOptions); res.sendStatus(204); });
+  app.post('/api/auth/logout-all', async (_req, res) => { await pool.query('DELETE FROM sessions WHERE user_id=$1', [actor(res).id]); res.clearCookie('tracker_session', sessionOptions); res.sendStatus(204); });
   app.get('/api/metadata', (_req, res) => res.json({ data: { statuses, priorities, types: issueTypes, transitions, roles: [...new Set(Object.values(roleAliases))] } }));
   app.get('/api/users', async (req, res) => {
     const { limit, offset } = paginationSchema.strict().parse(req.query);
@@ -89,6 +89,10 @@ export function createApp(pool: Database, config: Config, options: { oauthFetch?
     res.json({ data, pagination: { total, limit, offset } });
   });
   app.get('/api/users/:id', async (req, res) => res.json({ data: await users.getUser(pool, param(req)) }));
+  app.post('/api/users', async (req, res) => {
+    users.requireAdmin(actor(res));
+    res.status(201).json({ data: await users.createUser(pool, actor(res), registerSchema.parse(req.body)) });
+  });
   app.patch('/api/users/:id', async (req, res) => res.json({ data: await users.updateUser(pool, actor(res), param(req), userPatchSchema.parse(req.body)) }));
   app.get('/api/settings', async (_req, res) => res.json({ data: (await pool.query('SELECT theme,language FROM users WHERE id=$1', [actor(res).id])).rows[0] }));
   app.patch('/api/settings', async (req, res) => {
@@ -119,6 +123,14 @@ export function createApp(pool: Database, config: Config, options: { oauthFetch?
     const data = (await pool.query('SELECT id,actor_id AS "actorId",msg,time FROM activity_log ORDER BY time DESC,id DESC LIMIT $1 OFFSET $2', [limit, offset])).rows;
     res.json({ data, pagination: { limit, offset } });
   });
+  const clientDist = fileURLToPath(new URL('../../Client/dist/', import.meta.url));
+  if (existsSync(join(clientDist, 'index.html'))) {
+    app.use(express.static(clientDist));
+    app.get('/{*path}', (req, res, next) => {
+      if (req.path.startsWith('/api/') || req.path.startsWith('/health/')) return next();
+      res.sendFile(join(clientDist, 'index.html'));
+    });
+  }
   app.use((_req, _res, next) => next(new ApiError(404, 'NOT_FOUND', 'Route not found')));
   const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
     if (res.headersSent) return _next(error);

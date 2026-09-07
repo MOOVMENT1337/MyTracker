@@ -16,13 +16,15 @@ import {
 } from "./common";
 import { IssueSelects } from "./CreateForms";
 
+// Comment list and composer
 function Comments({ issue, setIssue, full }) {
-  const { users, user, t, language, notify, reload, run } = useTracker(),
-    formatDate = useDate();
-  const [text, setText] = useState(""),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const { users, user, t, language, notify, reload, run } = useTracker();
+  const formatDate = useDate();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const input = useRef(null);
+
   const refreshComments = async () => {
     const fresh = await data(`/issues/${issue.id}`);
     setIssue((old) => {
@@ -44,6 +46,7 @@ function Comments({ issue, setIssue, full }) {
       };
     });
   };
+
   const update = async (action) => {
     if (busy) return;
     setBusy(true);
@@ -56,6 +59,7 @@ function Comments({ issue, setIssue, full }) {
       setBusy(false);
     }
   };
+
   const post = () => {
     if (!text.trim()) {
       input.current?.focus();
@@ -73,6 +77,7 @@ function Comments({ issue, setIssue, full }) {
       await run(reload);
     });
   };
+
   return (
     <div
       className={`comments-section${full ? " task-page-comments-section" : ""}`}
@@ -96,8 +101,9 @@ function Comments({ issue, setIssue, full }) {
           </div>
         ) : (
           issue.comments.map((comment) => {
-            const author = users.find((user) => user.id === comment.authorId),
-              name = author?.displayName || comment.author || "Unknown";
+            const author = users.find((user) => user.id === comment.authorId);
+            const name = author?.displayName || comment.author || "Unknown";
+
             return (
               <div
                 className="comment-item"
@@ -208,6 +214,7 @@ function Comments({ issue, setIssue, full }) {
   );
 }
 
+// Shared modal and full-page issue editor
 function IssueEditor({ initialIssue, full = false, close }) {
   const { users, queues, t, language, run, reload, notify, setConfirmation } =
     useTracker();
@@ -220,12 +227,14 @@ function IssueEditor({ initialIssue, full = false, close }) {
     type: initialIssue.type,
     assigneeId: initialIssue.assigneeId || "",
   }));
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  const queue = queues.find((item) => item.id === issue.queueId),
-    reporter = users.find((item) => item.id === issue.reporterId);
-  const summaryId = full ? "taskPageSummary" : "summaryField",
-    descriptionId = full ? "taskPageDescription" : "descriptionField";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const queue = queues.find((item) => item.id === issue.queueId);
+  const reporter = users.find((item) => item.id === issue.reporterId);
+  const summaryId = full ? "taskPageSummary" : "summaryField";
+  const descriptionId = full ? "taskPageDescription" : "descriptionField";
+
   const save = async () => {
     if (busy) return;
     if (!form.summary.trim()) {
@@ -256,6 +265,7 @@ function IssueEditor({ initialIssue, full = false, close }) {
       setBusy(false);
     }
   };
+
   const deleteIssue = () =>
     setConfirmation({
       title: t("confirm.deleteTitle"),
@@ -271,6 +281,8 @@ function IssueEditor({ initialIssue, full = false, close }) {
         await run(reload);
       },
     });
+
+  // Reusable editor fragments
   const summary = (
     <Field
       className={full ? "task-page-span-full" : "issue-modal-full"}
@@ -289,6 +301,7 @@ function IssueEditor({ initialIssue, full = false, close }) {
       />
     </Field>
   );
+
   const meta = (
     <div
       className={
@@ -319,6 +332,7 @@ function IssueEditor({ initialIssue, full = false, close }) {
       ))}
     </div>
   );
+
   const fields = (
     <>
       {full && summary}
@@ -363,6 +377,7 @@ function IssueEditor({ initialIssue, full = false, close }) {
       {full ? meta : <div className="form-field issue-modal-full">{meta}</div>}
     </>
   );
+
   return (
     <>
       {full ? (
@@ -446,9 +461,11 @@ function IssueEditor({ initialIssue, full = false, close }) {
   );
 }
 
+// Modal wrapper
 export function IssueDetail({ initialIssue, onClose }) {
-  const { queues } = useTracker(),
-    queue = queues.find((item) => item.id === initialIssue.queueId);
+  const { queues } = useTracker();
+  const queue = queues.find((item) => item.id === initialIssue.queueId);
+
   return (
     <Modal
       id="issueModal"
@@ -480,12 +497,15 @@ export function IssueDetail({ initialIssue, onClose }) {
     </Modal>
   );
 }
+
+// Standalone issue page
 export function StandaloneTask({ taskId }) {
   const { t, language } = useTracker();
-  const [issue, setIssue] = useState(null),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(""),
-    [retry, setRetry] = useState(0);
+  const [issue, setIssue] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -501,6 +521,7 @@ export function StandaloneTask({ taskId }) {
       });
     return () => controller.abort();
   }, [taskId, retry]);
+
   const back = (
     <div className="task-page-header-row">
       <a className="task-page-back" href={taskUrl()}>
@@ -509,6 +530,7 @@ export function StandaloneTask({ taskId }) {
       </a>
     </div>
   );
+
   if (!issue)
     return (
       <div className="task-page-shell task-page-shell-empty">
@@ -536,6 +558,7 @@ export function StandaloneTask({ taskId }) {
         </div>
       </div>
     );
+
   return (
     <div className="task-page-shell">
       {back}

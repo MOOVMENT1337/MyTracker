@@ -3,13 +3,15 @@ import { useTracker, errorText } from "../context";
 
 export default function Login({ onLogin, initializing, initialError }) {
   const { auth, language } = useTracker();
-  const [identifier, setIdentifier] = useState(""),
-    [password, setPassword] = useState(""),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     setError(initialError);
   }, [initialError]);
+
   return (
     <div className="auth-shell">
       <div className="auth-card" role="main" aria-label={auth("signIn")}>

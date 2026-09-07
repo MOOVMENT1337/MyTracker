@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTracker } from "../context";
 
+// Icons, badges, and avatars
 export const Icon = ({ name, ...props }) => (
   <i className={name} aria-hidden="true" {...props} />
 );
@@ -59,18 +60,24 @@ export function Avatar({ user, size = 28 }) {
     </span>
   );
 }
+
+// Dates and status duration
 export function formatDateFull(iso) {
   if (!iso) return "—";
-  const d = new Date(iso),
-    pad = (n) => String(n).padStart(2, "0");
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
 export function useDate() {
   const { t, language } = useTracker();
+
   return (iso) => {
     if (!iso) return "—";
-    const date = new Date(iso),
-      days = Math.floor((Date.now() - date) / 86400000);
+    const date = new Date(iso);
+    const days = Math.floor((Date.now() - date) / 86400000);
+
     return days === 0
       ? t("misc.today")
       : days === 1
@@ -84,6 +91,7 @@ export function useDate() {
             });
   };
 }
+
 export function StatusTimer({ issue }) {
   const { t } = useTracker();
   const [, tick] = useState(0);
@@ -97,8 +105,8 @@ export function StatusTimer({ issue }) {
       (Date.now() - new Date(issue.statusChangedAt || issue.createdAt)) / 60000,
     ),
   );
-  const hours = Math.floor(minutes / 60),
-    days = Math.floor(hours / 24);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
   const duration =
     minutes < 60
       ? `${minutes}m`
@@ -118,6 +126,7 @@ export function StatusTimer({ issue }) {
     </>
   );
 }
+
 export function taskUrl(id) {
   const url = new URL(window.location.href);
   if (id) url.searchParams.set("taskId", id);
@@ -125,6 +134,7 @@ export function taskUrl(id) {
   return url.href;
 }
 
+// Dialogs and form feedback
 // React owns modal markup. Native listeners only implement focus and Escape, with cleanup.
 export function Modal({
   id,
@@ -139,15 +149,18 @@ export function Modal({
 }) {
   const { t } = useTracker();
   const [closing, setClosing] = useState(false);
-  const panel = useRef(null),
-    closeRef = useRef(onClose);
+  const panel = useRef(null);
+  const closeRef = useRef(onClose);
+
   closeRef.current = onClose;
   const close = () => setClosing(true);
+
   useEffect(() => {
     if (!closing) return;
     const timer = setTimeout(() => closeRef.current(), 180);
     return () => clearTimeout(timer);
   }, [closing]);
+
   useEffect(() => {
     const previous = document.activeElement;
     panel.current
@@ -189,6 +202,7 @@ export function Modal({
       if (previous?.isConnected) previous.focus();
     };
   }, []);
+
   return (
     <div
       id={id}
@@ -229,6 +243,7 @@ export function Modal({
     </div>
   );
 }
+
 export function Field({ id, label, required, className = "", children }) {
   return (
     <div className={`form-field${className ? ` ${className}` : ""}`}>
@@ -245,6 +260,7 @@ export function Field({ id, label, required, className = "", children }) {
     </div>
   );
 }
+
 export function FormError({ message }) {
   return message ? (
     <div className="auth-error" role="alert">
@@ -252,8 +268,10 @@ export function FormError({ message }) {
     </div>
   ) : null;
 }
+
 export function Toast({ message, type, onRemove }) {
   const [closing, setClosing] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => setClosing(true), 3000);
     const removal = setTimeout(onRemove, 3300);
@@ -262,6 +280,7 @@ export function Toast({ message, type, onRemove }) {
       clearTimeout(removal);
     };
   }, [onRemove]);
+
   return (
     <div
       className={`toast ${type}`}
@@ -283,9 +302,11 @@ export function Toast({ message, type, onRemove }) {
     </div>
   );
 }
+
 export function Confirmation({ title, message, onConfirm, onClose }) {
   const { t, run } = useTracker();
   const [busy, setBusy] = useState(false);
+
   useEffect(() => {
     const listener = (e) => {
       if (e.key === "Escape" && !busy) {
@@ -296,6 +317,7 @@ export function Confirmation({ title, message, onConfirm, onClose }) {
     document.addEventListener("keydown", listener, true);
     return () => document.removeEventListener("keydown", listener, true);
   }, [onClose, busy]);
+
   return createPortal(
     <div
       className="confirm-overlay"

@@ -14,9 +14,11 @@ import {
   useDate,
 } from "./common";
 
+// Search and issue filters
 function Filters({ filters, setFilters }) {
   const { users, metadata, t } = useTracker();
   const [open, setOpen] = useState(null);
+
   useEffect(() => {
     const outside = (e) => {
       if (!e.target.closest(".filter-dropdown-wrap")) setOpen(null);
@@ -31,6 +33,7 @@ function Filters({ filters, setFilters }) {
       document.removeEventListener("keydown", escape);
     };
   }, []);
+
   const toggle = (key, value) =>
     setFilters((old) => ({
       ...old,
@@ -43,6 +46,7 @@ function Filters({ filters, setFilters }) {
     filters.status.length ||
     filters.priority.length ||
     filters.assigneeId;
+
   return (
     <div className="filter-toolbar">
       <div className="search-wrap">
@@ -187,6 +191,7 @@ function Filters({ filters, setFilters }) {
   );
 }
 
+// Reusable issue preview
 function TaskCard({
   issue,
   className = "",
@@ -195,10 +200,11 @@ function TaskCard({
   onMouseDown,
   ghost,
 }) {
-  const { users, t } = useTracker(),
-    formatDate = useDate();
-  const assignee = users.find((user) => user.id === issue.assigneeId),
-    commentCount = issue.comments?.length || 0;
+  const { users, t } = useTracker();
+  const formatDate = useDate();
+  const assignee = users.find((user) => user.id === issue.assigneeId);
+  const commentCount = issue.comments?.length || 0;
+
   return (
     <article
       className={`task-card${className ? ` ${className}` : ""}`}
@@ -257,14 +263,16 @@ function TaskCard({
   );
 }
 
+// Kanban columns and drag interaction
 function Kanban({ issues }) {
   const { metadata, queues, t, openIssue, run, reload, notify } = useTracker();
-  const [drag, setDrag] = useState(null),
-    [entering, setEntering] = useState(true);
-  const dragRef = useRef(null),
-    preventClick = useRef(false),
-    cleanup = useRef(() => {}),
-    resetTimer = useRef(null);
+  const [drag, setDrag] = useState(null);
+  const [entering, setEntering] = useState(true);
+  const dragRef = useRef(null);
+  const preventClick = useRef(false);
+  const cleanup = useRef(() => {});
+  const resetTimer = useRef(null);
+
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntering(false));
     return () => cancelAnimationFrame(frame);
@@ -277,6 +285,7 @@ function Kanban({ issues }) {
     },
     [],
   );
+
   const start = (event, issue) => {
     if (
       event.button !== 0 ||
@@ -294,11 +303,13 @@ function Kanban({ issues }) {
       width: rect.width,
       started: false,
     };
+
     const columnAt = (e) =>
       document
         .elementsFromPoint(e.clientX, e.clientY)
         .find((node) => node.classList.contains("kanban-column"))?.dataset
         .status;
+
     const move = (e) => {
       const current = dragRef.current;
       if (
@@ -319,15 +330,18 @@ function Kanban({ issues }) {
       });
       e.preventDefault();
     };
+
     const cancel = () => {
       cleanup.current();
       setDrag(null);
       dragRef.current = null;
       document.body.classList.remove("dragging-card");
     };
+
     const up = (e) => {
-      const current = dragRef.current,
-        status = columnAt(e) || current?.status;
+      const current = dragRef.current;
+      const status = columnAt(e) || current?.status;
+
       cancel();
       if (current?.started && status && status !== issue.status)
         run(async () => {
@@ -344,23 +358,27 @@ function Kanban({ issues }) {
         preventClick.current = false;
       }, 80);
     };
+
     const escape = (e) => {
       if (e.key === "Escape") {
         cancel();
         preventClick.current = false;
       }
     };
+
     cleanup.current = () => {
       document.removeEventListener("mousemove", move);
       document.removeEventListener("mouseup", up);
       document.removeEventListener("keydown", escape);
       window.removeEventListener("blur", cancel);
     };
+
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
     document.addEventListener("keydown", escape);
     window.addEventListener("blur", cancel);
   };
+
   if (!queues.length)
     return (
       <div className="empty-state">
@@ -429,20 +447,23 @@ function Kanban({ issues }) {
   );
 }
 
+// Board data and loading states
 export default function Board({ view, queueId, filters, setFilters }) {
-  const { user, revision, metadata, t, language } = useTracker(),
-    formatDate = useDate();
-  const [issues, setIssues] = useState([]),
-    [stats, setStats] = useState(null),
-    [activity, setActivity] = useState([]);
-  const [loading, setLoading] = useState(false),
-    [error, setError] = useState(""),
-    [retry, setRetry] = useState(0);
+  const { user, revision, metadata, t, language } = useTracker();
+  const formatDate = useDate();
+  const [issues, setIssues] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+
   const query = queryString({
     ...filters,
     queueId: view === "queue" ? queueId : undefined,
     myTasks: view === "my-tasks",
   });
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -480,6 +501,7 @@ export default function Board({ view, queueId, filters, setFilters }) {
       controller.abort();
     };
   }, [query, view, revision, user.id, retry]);
+
   return (
     <>
       <div id="filterToolbar">

@@ -3,6 +3,7 @@ import { translations, authTranslations } from "./translations";
 
 export const TrackerContext = createContext(null);
 export const useTracker = () => useContext(TrackerContext);
+
 export function translator(language, auth = false) {
   const dictionary = auth ? authTranslations : translations;
   return (key, params = {}) => {
@@ -14,6 +15,7 @@ export function translator(language, auth = false) {
     );
   };
 }
+
 export function errorText(error, language) {
   const messages = {
     NETWORK_ERROR: [

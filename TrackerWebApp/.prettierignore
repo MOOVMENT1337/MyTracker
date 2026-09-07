@@ -1,0 +1,15 @@
+Client/dist/
+Client/node_modules/
+Client/playwright-report/
+Client/test-results/
+Client/src/styles/animations.css
+Client/src/styles/components.css
+Client/src/styles/drag-drop.css
+Client/src/styles/modals.css
+Client/src/styles/reset.css
+Client/src/styles/responsive.css
+Client/src/styles/themes.css
+Server/dist/
+Server/node_modules/
+Server/docs/
+Server/seeds/

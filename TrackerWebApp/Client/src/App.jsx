@@ -20,10 +20,12 @@ const emptyFilters = () => ({
   priority: [],
   assigneeId: "",
 });
+
 export default function App() {
-  const [user, setUser] = useState(null),
-    [users, setUsers] = useState([]),
-    [queues, setQueues] = useState([]);
+  // Workspace data
+  const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [queues, setQueues] = useState([]);
   const [metadata, setMetadata] = useState({
     statuses: [],
     priorities: [],
@@ -31,27 +33,33 @@ export default function App() {
     roles: [],
   });
   const [settings, setSettings] = useState({ language: "ru", theme: "dark" });
-  const [initializing, setInitializing] = useState(true),
-    [authError, setAuthError] = useState("");
-  const [view, setView] = useState("all-issues"),
-    [queueId, setQueueId] = useState(null),
-    [filters, setFilters] = useState(emptyFilters);
-  const [collapsed, setCollapsed] = useState(false),
-    [mobileOpen, setMobileOpen] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  const [authError, setAuthError] = useState("");
+
+  // Navigation and interface state
+  const [view, setView] = useState("all-issues");
+  const [queueId, setQueueId] = useState(null);
+  const [filters, setFilters] = useState(emptyFilters);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [modal, setModal] = useState(null),
-    [editUser, setEditUser] = useState(null),
-    [createUser, setCreateUser] = useState(false);
-  const [confirmation, setConfirmation] = useState(null),
-    [toasts, setToasts] = useState([]),
-    [revision, setRevision] = useState(0);
+  const [modal, setModal] = useState(null);
+  const [editUser, setEditUser] = useState(null);
+  const [createUser, setCreateUser] = useState(false);
+  const [confirmation, setConfirmation] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const [revision, setRevision] = useState(0);
+
+  // Stable values shared by callbacks
   const taskId = new URLSearchParams(window.location.search).get("taskId");
-  const toastCounter = useRef(0),
-    generation = useRef(0),
-    authenticated = useRef(false);
-  const language = settings.language,
-    t = translator(language),
-    auth = translator(language, true);
+  const toastCounter = useRef(0);
+  const generation = useRef(0);
+  const authenticated = useRef(false);
+  const language = settings.language;
+  const t = translator(language);
+  const auth = translator(language, true);
+
+  // Shared workspace operations
   const notify = useCallback((message, type = "success") => {
     const id = ++toastCounter.current;
     const onRemove = () =>
@@ -84,6 +92,7 @@ export default function App() {
     setFilters(emptyFilters());
     setSettings({ language: "ru", theme: "dark" });
   }, []);
+
   const loadWorkspace = async (account, signal) => {
     const id = generation.current;
     const results = await Promise.all([
@@ -100,6 +109,7 @@ export default function App() {
     setSettings(results[3]);
     setUser(account);
   };
+
   const reload = async () => {
     const id = generation.current;
     const [newUsers, newQueues] = await Promise.all([
@@ -114,6 +124,8 @@ export default function App() {
     );
     setRevision((value) => value + 1);
   };
+
+  // Application lifecycle
   useEffect(() => {
     const controller = new AbortController();
     (async () => {
@@ -141,12 +153,14 @@ export default function App() {
       window.removeEventListener("tracker-session-expired", expired);
     };
   }, []);
+
   useEffect(() => {
     document.body.classList.toggle("dark-theme", settings.theme === "dark");
     document.body.classList.toggle("auth-view", !user);
     document.body.classList.toggle("task-page-mode", !!user && !!taskId);
     document.documentElement.lang = language;
   }, [settings.theme, user, taskId, language]);
+
   useEffect(() => {
     const resize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -162,6 +176,8 @@ export default function App() {
       window.removeEventListener("keydown", escape);
     };
   }, []);
+
+  // User actions
   const login = async (credentials) => {
     const session = await data("/auth/login", {
       method: "POST",
@@ -171,6 +187,7 @@ export default function App() {
     setAuthError("");
     notify(auth("welcome", { name: session.user.displayName }));
   };
+
   const logout = () =>
     run(async () => {
       await data("/auth/logout", { method: "POST", body: {} });
@@ -178,17 +195,20 @@ export default function App() {
       setAuthError("");
       notify(auth("loggedOut"), "info");
     });
+
   const navigate = (next, id = null) => {
     setView(next);
     setQueueId(id);
     setFilters(emptyFilters());
     setMobileOpen(false);
   };
+
   const openIssue = (id) =>
     run(async () => {
       const issue = await data(`/issues/${encodeURIComponent(id)}`);
       setModal({ type: "issue", issue });
     });
+
   const deleteQueue = (queue) =>
     run(async () => {
       const stats = await data(
@@ -210,6 +230,8 @@ export default function App() {
         },
       });
     });
+
+  // Values exposed to child components
   const context = {
     user,
     users,
@@ -228,6 +250,7 @@ export default function App() {
     logout,
     setSettings,
   };
+
   return (
     <TrackerContext.Provider value={context}>
       <div id="login-container" className={user ? "hidden" : undefined}>

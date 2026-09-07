@@ -3,6 +3,7 @@ import { data } from "../api";
 import { errorText, useTracker } from "../context";
 import { Field, FormError, Icon, Modal } from "./common";
 
+// Shared issue select fields
 export function IssueSelects({ form, setForm, ids }) {
   const { metadata, users, t } = useTracker();
   const selects = {
@@ -39,6 +40,7 @@ export function IssueSelects({ form, setForm, ids }) {
   ));
 }
 
+// Issue creation
 export function CreateIssue({ defaultQueueId, onClose }) {
   const { queues, t, language, reload, notify, run } = useTracker();
   const [form, setForm] = useState({
@@ -50,11 +52,12 @@ export function CreateIssue({ defaultQueueId, onClose }) {
     assigneeId: "",
     status: "Open",
   });
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const queue = queues.find((queue) => queue.id === form.queueId);
   const update = (name) => (e) =>
     setForm((old) => ({ ...old, [name]: e.target.value }));
+
   const submit = async (event, close) => {
     event.preventDefault();
     if (busy) return;
@@ -88,6 +91,7 @@ export function CreateIssue({ defaultQueueId, onClose }) {
       setBusy(false);
     }
   };
+
   return (
     <Modal
       id="createIssueModal"
@@ -197,13 +201,15 @@ export function CreateIssue({ defaultQueueId, onClose }) {
   );
 }
 
+// Queue creation
 export function CreateQueue({ onClose }) {
   const { queues, t, language, notify, reload, run } = useTracker();
-  const [name, setName] = useState(""),
-    [key, setKey] = useState(""),
-    [color, setColor] = useState("#4F8EF7");
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [name, setName] = useState("");
+  const [key, setKey] = useState("");
+  const [color, setColor] = useState("#4F8EF7");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
   const colors = [
     "#4F8EF7",
     "#E06C75",
@@ -213,6 +219,7 @@ export function CreateQueue({ onClose }) {
     "#56B6C2",
     "#D19A66",
   ];
+
   const submit = async (event, close) => {
     event.preventDefault();
     if (busy) return;
@@ -246,6 +253,7 @@ export function CreateQueue({ onClose }) {
       setBusy(false);
     }
   };
+
   return (
     <Modal
       id="createQueueModal"

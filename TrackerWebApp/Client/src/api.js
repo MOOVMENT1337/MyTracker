@@ -47,6 +47,7 @@ export async function request(path, { method = "GET", body, signal } = {}) {
 export async function data(path, options) {
   return (await request(path, options))?.data;
 }
+
 export async function list(path, query = {}, signal) {
   const items = [];
   for (let offset = 0; ; offset += 100) {
@@ -68,6 +69,7 @@ export async function list(path, query = {}, signal) {
     )
       break;
   }
+
   return items;
 }
 

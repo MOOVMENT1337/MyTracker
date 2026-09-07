@@ -3,11 +3,13 @@ import { data } from "../api";
 import { errorText, useTracker } from "../context";
 import { Avatar, Field, FormError, Icon, Modal } from "./common";
 
+// Personal settings
 export function Settings({ onClose }) {
   const { user, t, auth, settings, setSettings, logout, language } =
     useTracker();
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
   const change = async (name, value) => {
     if (busy) return;
     setBusy(true);
@@ -22,6 +24,7 @@ export function Settings({ onClose }) {
       setBusy(false);
     }
   };
+
   return (
     <Modal
       id="settingsModal"
@@ -112,6 +115,8 @@ const predefinedRoles = [
   "System Administrator",
   "Employee",
 ];
+
+// Administration table
 function AdminRow({ account, onEdit }) {
   const { user, t, language, reload, notify, run } = useTracker();
   const [mode, setMode] = useState(
@@ -123,9 +128,10 @@ function AdminRow({ account, onEdit }) {
   const [custom, setCustom] = useState(
     predefinedRoles.includes(account.role) ? "" : account.role,
   );
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const locked = account.id === user.id;
+
   const save = async () => {
     if (busy) return;
     const role = (mode === "custom" ? custom : selected).trim();
@@ -145,6 +151,7 @@ function AdminRow({ account, onEdit }) {
       setBusy(false);
     }
   };
+
   return (
     <tr data-user-id={account.id}>
       <td>
@@ -238,8 +245,10 @@ function AdminRow({ account, onEdit }) {
     </tr>
   );
 }
+
 export function AdminPanel({ onClose, onEdit, onCreate }) {
   const { users, t, auth, language } = useTracker();
+
   return (
     <Modal
       id="adminPanelModal"
@@ -288,11 +297,14 @@ export function AdminPanel({ onClose, onEdit, onCreate }) {
     </Modal>
   );
 }
+
+// User account forms
 export function EditName({ user, onClose }) {
   const { t, language, notify, reload, run } = useTracker();
-  const [name, setName] = useState(user.displayName),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [name, setName] = useState(user.displayName);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
   const submit = async (event, close) => {
     event.preventDefault();
     if (busy) return;
@@ -316,6 +328,7 @@ export function EditName({ user, onClose }) {
       setBusy(false);
     }
   };
+
   return (
     <Modal
       id="editNameModal"
@@ -376,6 +389,7 @@ export function EditName({ user, onClose }) {
     </Modal>
   );
 }
+
 export function CreateUser({ onClose }) {
   const { auth, t, language, notify, reload, run } = useTracker();
   const [form, setForm] = useState({
@@ -383,9 +397,10 @@ export function CreateUser({ onClose }) {
     email: "",
     password: "",
   });
-  const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const title = language === "ru" ? "Создать пользователя" : "Create user";
+
   const submit = async (event, close) => {
     event.preventDefault();
     if (busy) return;
@@ -430,6 +445,7 @@ export function CreateUser({ onClose }) {
       setBusy(false);
     }
   };
+
   return (
     <Modal
       id="createUserModal"

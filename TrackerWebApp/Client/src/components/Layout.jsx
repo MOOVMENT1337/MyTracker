@@ -1,6 +1,7 @@
 import { useTracker } from "../context";
 import { Avatar, Icon } from "./common";
 
+// Primary navigation
 export function Sidebar({
   view,
   queueId,
@@ -26,6 +27,7 @@ export function Sidebar({
       <span className="nav-label">{t(label)}</span>
     </a>
   );
+
   return (
     <aside id="sidebar">
       <div className="sidebar-logo">
@@ -122,6 +124,8 @@ export function Sidebar({
     </aside>
   );
 }
+
+// Current view header and global actions
 export function Topbar({ view, queueId, toggleMenu, settings, createIssue }) {
   const { user, queues, t, auth, logout } = useTracker();
   const queue = queues.find((item) => item.id === queueId);
@@ -151,6 +155,7 @@ export function Topbar({ view, queueId, toggleMenu, settings, createIssue }) {
         )}
       </>
     );
+
   return (
     <header id="topbar">
       <div className="topbar-left">

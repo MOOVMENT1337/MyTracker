@@ -10,6 +10,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "format": "prettier --config ../.prettierrc.json --ignore-path ../.prettierignore --write src tests *.js *.html ../Server/src ../Server/test",
+    "format:check": "prettier --config ../.prettierrc.json --ignore-path ../.prettierignore --check src tests *.js *.html ../Server/src ../Server/test",
     "test": "playwright test",
     "test:empty": "playwright test --config playwright.empty.config.js",
     "test:serve": "node --import ../Server/node_modules/tsx/dist/loader.mjs tests/server.ts",

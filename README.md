@@ -2,6 +2,26 @@
 
 Трекер задач на React JavaScript, Express и PostgreSQL. Вход — только по email/имени и паролю. Пользователей создаёт администратор и самостоятельно передаёт им реквизиты. Публичной регистрации и внешнего входа нет. По умолчанию используются русский язык и тёмная тема.
 
+## Production-деплой на NuxtCloud
+
+Репозиторий подготовлен для воспроизводимого запуска всего проекта на одном NuxtCloud VPS через Docker Compose. Один образ собирает React-клиент и Express API, Caddy автоматически обслуживает HTTPS, а PostgreSQL работает в закрытой Docker-сети и хранит данные в постоянном внешнем volume. Миграции выполняются автоматически перед запуском API.
+
+Краткий путь на чистом VPS после установки Git:
+
+```bash
+git clone https://github.com/MOOVMENT1337/MyTracker.git
+cd MyTracker
+bash deploy/bootstrap-debian.sh
+bash deploy/deploy.sh
+nano .env.production
+bash deploy/deploy.sh
+bash deploy/admin.sh
+```
+
+Потребуется только домен, направленный на IP сервера. Первый запуск создаёт конфигурацию и безопасный пароль базы; после указания домена повторный запуск собирает и запускает весь стек. Полная инструкция, бэкапы, обновление и диагностика описаны в [руководстве по деплою](deploy/README.md).
+
+При каждом push GitHub Actions выполняет чистую сборку обеих частей, серверные и браузерные тесты и сборку production Docker-образа. Деплоить на VPS рекомендуется только коммит с успешно завершившейся проверкой **CI**.
+
 ## Структура проекта
 
 | Папка | Назначение |
@@ -159,7 +179,7 @@ npm start
 
 Используются ранее настроенные `Server/.env`, база и администратор. Откройте [http://127.0.0.1:3000](http://127.0.0.1:3000): backend раздаёт `Client/dist` и API с одного адреса. Отдельно запускать frontend не нужно. После изменения frontend нужно повторить его сборку; после изменения backend — его сборку и перезапуск.
 
-Для размещения в интернете настройте HTTPS, `NODE_ENV=production`, `PUBLIC_URL`, `FRONTEND_URL` и `CORS_ORIGINS` под свой домен. Подробности и вариант Docker Compose — в [README backend](TrackerWebApp/Server/README.md). Текущий Docker-образ собирает только API, поэтому frontend для Docker размещается отдельно.
+Для размещения в интернете используйте готовую production-конфигурацию NuxtCloud из [руководства по деплою](deploy/README.md). Она настраивает HTTPS, frontend, API и закрытую PostgreSQL на одном VPS. Локальный `TrackerWebApp/Server/Dockerfile` собирает только API, а корневой production `Dockerfile` — API и frontend вместе.
 
 ## Очистка существующего трекера
 

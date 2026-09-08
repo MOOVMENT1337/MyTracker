@@ -3,8 +3,10 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.production.example
 coverage/
 *.log
 .local-postgres/
 test-results/
 playwright-report/
+backups/

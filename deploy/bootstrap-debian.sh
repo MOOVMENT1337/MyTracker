@@ -18,7 +18,7 @@ esac
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y ca-certificates curl git nano ufw
+apt-get install -y ca-certificates cron curl git nano ufw
 
 if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>&1; then
   install -m 0755 -d /etc/apt/keyrings
@@ -32,6 +32,7 @@ if ! command -v docker >/dev/null 2>&1 || ! docker compose version >/dev/null 2>
 fi
 
 systemctl enable --now docker
+systemctl enable --now cron
 docker compose version >/dev/null 2>&1 || fail "Docker установлен без Compose plugin."
 
 if [[ -n "${SUDO_USER:-}" && "$SUDO_USER" != "root" ]]; then

@@ -1,4 +1,5 @@
 import pg from "pg";
+import { readFileSync } from "node:fs";
 import type { Config } from "../config.js";
 
 export type Database = pg.Pool;
@@ -9,7 +10,14 @@ export function createPool(config: Config) {
   return new pg.Pool({
     connectionString: config.DATABASE_URL,
     ssl:
-      config.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : undefined,
+      config.DATABASE_SSL === "true"
+        ? {
+            rejectUnauthorized: true,
+            ...(config.DATABASE_SSL_CA
+              ? { ca: readFileSync(config.DATABASE_SSL_CA, "utf8") }
+              : {}),
+          }
+        : undefined,
     max: 10,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,

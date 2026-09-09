@@ -92,11 +92,11 @@ npm start
 
 Остановите прежний процесс API перед запуском, чтобы освободить порт 3000. Backend раздаёт frontend с того же адреса, если предварительно выполнен `npm run build` в `Client` и существует `Client/dist`. Иначе он обслуживает только API; используйте отдельный Vite либо соберите клиент. Полная последовательность сборки обоих проектов — в [корневом README](../../README.md#запуск-собранной-версии).
 
-В production обязательны `NODE_ENV=production`, HTTPS в `PUBLIC_URL` и `FRONTEND_URL`, сильные пароли и узкий список `CORS_ORIGINS`. Для удалённой БД включайте `DATABASE_SSL=true`; локальная PostgreSQL из production Compose работает в закрытой Docker-сети с `DATABASE_SSL=false`. TLS завершает reverse proxy; сам Express слушает HTTP. `TRUST_PROXY_HOPS` меняйте только под известную топологию прокси. Не открывайте PostgreSQL в интернет.
+В production обязательны `NODE_ENV=production`, HTTPS в `PUBLIC_URL` и `FRONTEND_URL`, сильные пароли и узкий список `CORS_ORIGINS`. Для Supabase используются `DATABASE_SSL=true`, официальный CA-сертификат и Session pooler на порту `5432`. TLS сайта завершает reverse proxy; сам Express слушает HTTP. `TRUST_PROXY_HOPS` меняйте только под известную топологию прокси.
 
 ## Docker Compose (альтернатива)
 
-Эта секция описывает локальный Compose для разработки. Для production-деплоя всего проекта на NuxtCloud используйте корневые `Dockerfile`, `compose.production.yaml` и [отдельное руководство](../../deploy/README.md): они собирают backend и frontend вместе, запускают закрытую PostgreSQL и добавляют HTTPS.
+Эта секция описывает локальный Compose для разработки. Для production-деплоя frontend/API на NuxtCloud и базы на Supabase используйте корневые `Dockerfile`, `compose.production.yaml` и [отдельное руководство](../../deploy/README.md): они собирают backend и frontend вместе, подключают Supabase по проверяемому TLS и добавляют HTTPS.
 
 Docker не обязателен. Если он установлен, в `.env` задайте `POSTGRES_PASSWORD` и выполните:
 

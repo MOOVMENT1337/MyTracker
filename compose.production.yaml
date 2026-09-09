@@ -7,44 +7,19 @@ x-logging: &default-logging
     max-file: "3"
 
 services:
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-tracker}
-      POSTGRES_USER: ${POSTGRES_USER:-tracker}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
-      POSTGRES_INITDB_ARGS: --data-checksums --auth-host=scram-sha-256
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    shm_size: 128mb
-    healthcheck:
-      test:
-        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 10s
-    security_opt:
-      - no-new-privileges:true
-    stop_grace_period: 60s
-    logging: *default-logging
-
   app:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     init: true
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-tracker}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}@db:5432/${POSTGRES_DB:-tracker}
-      DATABASE_SSL: "false"
+      DATABASE_URL: ${DATABASE_URL:?Set the Supabase DATABASE_URL in .env.production}
+      DATABASE_SSL: "${DATABASE_SSL:?Set DATABASE_SSL=true in .env.production}"
+      DATABASE_SSL_CA: /app/TrackerWebApp/Server/certs/supabase-ca.crt
       PUBLIC_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env.production}
       FRONTEND_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env.production}
       CORS_ORIGINS: https://${APP_DOMAIN:?Set APP_DOMAIN in .env.production}
@@ -83,8 +58,5 @@ services:
     logging: *default-logging
 
 volumes:
-  postgres_data:
-    external: true
-    name: mytracker_postgres_data
   caddy_data:
   caddy_config:

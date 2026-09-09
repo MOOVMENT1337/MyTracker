@@ -12,6 +12,7 @@ const envSchema = z.object({
     .url()
     .refine((v) => /^postgres(ql)?:/.test(v), "PostgreSQL URL required"),
   DATABASE_SSL: z.enum(["true", "false"]).default("false"),
+  DATABASE_SSL_CA: z.string().min(1).optional(),
   CORS_ORIGINS: z.string().default("http://localhost:5173"),
   PUBLIC_URL: z.string().url().default("http://localhost:3000"),
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),

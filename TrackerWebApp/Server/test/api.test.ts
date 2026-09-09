@@ -122,8 +122,26 @@ test("migrations and seed are repeatable and production seed is blocked", async 
       (await db.pool.query("SELECT count(*) FROM schema_migrations")).rows[0]
         .count,
     ),
-    3,
+    4,
   );
+  const protectedTables = await db.pool.query(
+    "SELECT relrowsecurity FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = current_schema()) AND relname = ANY($1::text[])",
+    [
+      [
+        "users",
+        "sessions",
+        "oauth_states",
+        "oauth_identities",
+        "queues",
+        "issues",
+        "comments",
+        "activity_log",
+        "schema_migrations",
+      ],
+    ],
+  );
+  assert.equal(protectedTables.rowCount, 9);
+  assert.ok(protectedTables.rows.every((row) => row.relrowsecurity));
 });
 test("all 6 demo users, 3 queues, 12 issues and 9 comments are preserved", async () => {
   const users = await request("/api/users", { token: aliceToken });

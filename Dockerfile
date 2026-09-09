@@ -28,6 +28,7 @@ RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund \
 
 COPY --from=server-build /build/TrackerWebApp/Server/dist ./dist
 COPY TrackerWebApp/Server/migrations ./migrations
+COPY deploy/supabase-ca.crt ./certs/supabase-ca.crt
 COPY --from=client-build /build/TrackerWebApp/Client/dist /app/TrackerWebApp/Client/dist
 COPY deploy/entrypoint.sh /usr/local/bin/mytracker-entrypoint
 RUN chmod 0755 /usr/local/bin/mytracker-entrypoint

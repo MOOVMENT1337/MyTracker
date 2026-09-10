@@ -1,0 +1,18 @@
+{
+  "name": "mytracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "workspaces": [
+    "TrackerWebApp/Client",
+    "TrackerWebApp/Server"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace tracker-client && node scripts/copy-client-dist.mjs",
+    "typecheck": "npm run typecheck --workspace tracker-server",
+    "test:server": "npm test --workspace tracker-server"
+  }
+}

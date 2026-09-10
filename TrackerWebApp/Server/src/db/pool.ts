@@ -18,7 +18,7 @@ export function createPool(config: Config) {
               : {}),
           }
         : undefined,
-    max: 10,
+    max: config.DATABASE_POOL_MAX,
     connectionTimeoutMillis: 5000,
     idleTimeoutMillis: 30000,
     statement_timeout: 10000,

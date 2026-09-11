@@ -18,6 +18,8 @@ if (vercelHost) {
   process.env.CORS_ORIGINS ||= vercelOrigin;
 }
 
+process.env.DATABASE_URL ||= process.env.POSTGRES_URL;
+
 const config = readConfig();
 const pool = createPool(config);
 

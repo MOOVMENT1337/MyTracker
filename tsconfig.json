@@ -1,0 +1,8 @@
+{
+  "extends": "./TrackerWebApp/Server/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist-vercel"
+  },
+  "include": ["src/**/*.ts", "TrackerWebApp/Server/src/**/*.ts"]
+}

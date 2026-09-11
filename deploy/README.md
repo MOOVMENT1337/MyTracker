@@ -1,4 +1,4 @@
-# Деплой MyTracker: NuxtCloud + Supabase
+# Деплой Task State: NuxtCloud + Supabase
 
 Production-схема разделена так:
 
@@ -37,8 +37,8 @@ Direct connection `db.PROJECT_REF.supabase.co:5432` тоже поддержив�
 ```bash
 ssh root@IP_СЕРВЕРА
 apt-get update && apt-get install -y git
-git clone https://github.com/MOOVMENT1337/MyTracker.git
-cd MyTracker
+git clone https://github.com/MOOVMENT1337/MyTracker.git taskstate
+cd taskstate
 bash deploy/bootstrap-debian.sh
 ```
 
@@ -89,7 +89,7 @@ https://ВАШ_ДОМЕН/health/ready
 bash deploy/admin.sh
 ```
 
-Пароль вводится скрыто и не сохраняется в истории терминала. Скрипт нужно выполнить один раз; остальных пользователей создавайте через панель администратора MyTracker.
+Пароль вводится скрыто и не сохраняется в истории терминала. Скрипт нужно выполнить один раз; остальных пользователей создавайте через панель администратора Task State.
 
 ## Обновление и диагностика
 

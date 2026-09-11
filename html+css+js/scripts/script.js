@@ -347,7 +347,7 @@ const translations = {
 
 const authTranslations = {
   en: {
-    title: 'Yandex Tracker',
+    title: 'Task State',
     subtitle: 'Sign in to manage queues, tasks, and comments.',
     signIn: 'Sign In',
     register: 'Register',
@@ -378,7 +378,7 @@ const authTranslations = {
     displayNameRequired: 'Please enter display name',
   },
   ru: {
-    title: 'Yandex Tracker',
+    title: 'Task State',
     subtitle: 'Войдите, чтобы управлять очередями, задачами и комментариями.',
     signIn: 'Войти',
     register: 'Зарегистрироваться',
@@ -737,7 +737,7 @@ function showLoginScreen(mode = 'login') {
   }
 
   document.body.classList.add('auth-view');
-  document.title = `${State.authMode === 'register' ? authText('register') : authText('signIn')} – YTracker`;
+  document.title = `${State.authMode === 'register' ? authText('register') : authText('signIn')} – Task State`;
 }
 
 function showAppContainer() {
@@ -2021,7 +2021,7 @@ function showMainApp() {
     taskPage.classList.remove('active');
     taskPage.innerHTML = '';
   }
-  document.title = 'YTracker – Project Tracker';
+  document.title = 'Task State – Project Tracker';
 }
 
 function showStandaloneTaskPage() {
@@ -2044,7 +2044,7 @@ function renderStandaloneTaskPage(issueId) {
 
   const issue = AppData.getIssueById(issueId);
   renderFullPageTaskView(issue);
-  document.title = issue ? `${issue.key} – ${issue.summary}` : `${t('misc.taskNotFound')} – YTracker`;
+  document.title = issue ? `${issue.key} – ${issue.summary}` : `${t('misc.taskNotFound')} – Task State`;
 
   if (issue) {
     bindStandaloneTaskPageEvents(issueId);

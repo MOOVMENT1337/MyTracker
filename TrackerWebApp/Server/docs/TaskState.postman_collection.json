@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "MyTracker — backend verification",
+    "name": "Task State — backend verification",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "description": "Run against a local demo-seeded database. Creates its own queue; removes it at the end. Source demo tasks are not modified."
   },

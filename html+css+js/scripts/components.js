@@ -176,7 +176,7 @@ function renderSidebar(state) {
   sidebar.innerHTML = `
     <div class="sidebar-logo">
       <div class="logo-icon"><i class="fa-solid fa-layer-group"></i></div>
-      <span class="logo-text">YTracker</span>
+      <span class="logo-text">Task State</span>
       <button class="sidebar-collapse-btn" id="sidebarToggle" title="${escapeAttr(t('tooltips.toggleSidebar'))}">
         <i class="fa-solid fa-chevron-left"></i>
       </button>

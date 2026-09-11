@@ -1,5 +1,5 @@
 // ============================================================
-// data.js – Mock data & data access layer for Yandex Tracker Clone
+// data.js – Mock data & data access layer for Task State
 // ============================================================
 
 const DEFAULT_USERS = [

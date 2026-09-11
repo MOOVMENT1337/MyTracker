@@ -1,4 +1,4 @@
-name: mytracker
+name: taskstate
 x-api: &api
   build: .
   environment: &environment

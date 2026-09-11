@@ -34,7 +34,7 @@ export function Sidebar({
         <div className="logo-icon">
           <Icon name="fa-solid fa-layer-group" />
         </div>
-        <span className="logo-text">YTracker</span>
+        <span className="logo-text">Task State</span>
         <button
           type="button"
           className="sidebar-collapse-btn"

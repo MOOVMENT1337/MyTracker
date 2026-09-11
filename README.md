@@ -1,4 +1,4 @@
-# MyTracker
+# Task State
 
 Трекер задач на React JavaScript, Express и PostgreSQL. Вход — только по email/имени и паролю. Пользователей создаёт администратор и самостоятельно передаёт им реквизиты. Публичной регистрации и внешнего входа нет. По умолчанию используются русский язык и тёмная тема.
 
@@ -9,8 +9,8 @@
 Краткий путь на чистом VPS после установки Git:
 
 ```bash
-git clone https://github.com/MOOVMENT1337/MyTracker.git
-cd MyTracker
+git clone https://github.com/MOOVMENT1337/MyTracker.git taskstate
+cd taskstate
 bash deploy/bootstrap-debian.sh
 bash deploy/deploy.sh
 nano .env.production

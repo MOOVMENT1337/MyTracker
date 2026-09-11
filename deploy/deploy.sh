@@ -103,7 +103,7 @@ printf 'Ожидаю успешную проверку приложения'
 for _ in {1..60}; do
   health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$app_id")"
   if [[ "$health" == "healthy" ]]; then
-    printf '\nMyTracker работает. Миграции Supabase применены, Caddy автоматически завершит настройку HTTPS.\n'
+    printf '\nTask State работает. Миграции Supabase применены, Caddy автоматически завершит настройку HTTPS.\n'
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
     exit 0
   fi

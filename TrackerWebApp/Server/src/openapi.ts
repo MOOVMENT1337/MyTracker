@@ -290,7 +290,7 @@ route(
 export const openapi = {
   openapi: "3.1.0",
   info: {
-    title: "MyTracker API",
+    title: "Task State API",
     version: "1.0.0",
     description:
       "Single shared workspace matching the html+css+js demo. Bearer sessions; JSON requests. Admin rights are independent from job titles.",

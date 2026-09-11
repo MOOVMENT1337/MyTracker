@@ -350,7 +350,7 @@ export const translations = {
 
 export const authTranslations = {
   en: {
-    title: "Yandex Tracker",
+    title: "Task State",
     subtitle: "Sign in to manage queues, tasks, and comments.",
     signIn: "Sign In",
     email: "Email",
@@ -367,7 +367,7 @@ export const authTranslations = {
     displayNameRequired: "Please enter display name",
   },
   ru: {
-    title: "Yandex Tracker",
+    title: "Task State",
     subtitle: "Войдите, чтобы управлять очередями, задачами и комментариями.",
     signIn: "Войти",
     email: "Email",

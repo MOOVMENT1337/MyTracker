@@ -1,12 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "installCommand": "npm ci --prefix TrackerWebApp/Client && npm ci --prefix TrackerWebApp/Server && npm install --package-lock=false --workspaces=false",
   "buildCommand": "npm run build",
-  "functions": {
-    "src/index.ts": {
-      "includeFiles": "deploy/supabase-ca.crt",
-      "maxDuration": 60
-    }
-  },
   "headers": [
     {
       "source": "/assets/(.*)",
